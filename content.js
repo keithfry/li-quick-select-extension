@@ -20,44 +20,62 @@ function selectAboutTheJobSection() {
       }
     }
 
-    if (!aboutJobHeading) {
-      console.warn('LinkedIn Job Quick Select: "About the job" heading not found on this page');
-      return;
-    }
-
     // Find the expandable text box span (the actual content)
     const contentSpan = document.querySelector('span[data-testid="expandable-text-box"]');
 
-    if (!contentSpan) {
-      console.warn('LinkedIn Job Quick Select: Content span not found');
+    // Try primary method: using heading and expandable text box
+    if (aboutJobHeading && contentSpan) {
+      // Look for the hr separator that marks the end of the section
+      const hrSeparator = contentSpan.parentElement.querySelector('hr');
+
+      // Create a range for the selection
+      const range = document.createRange();
+
+      // Start from the beginning of the content span
+      range.setStartBefore(contentSpan.firstChild || contentSpan);
+
+      // End at the hr separator if it exists, otherwise end of content span
+      if (hrSeparator) {
+        range.setEndBefore(hrSeparator);
+      } else {
+        range.setEndAfter(contentSpan.lastChild || contentSpan);
+      }
+
+      // Apply the selection
+      const selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+
+      // Scroll to the top of the selected content
+      aboutJobHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+      console.log('LinkedIn Job Quick Select: Text selected successfully (primary method)');
       return;
     }
 
-    // Look for the hr separator that marks the end of the section
-    const hrSeparator = contentSpan.parentElement.querySelector('hr');
+    // Fallback method: look for jobs-description content divs
+    console.log('LinkedIn Job Quick Select: Trying fallback method...');
 
-    // Create a range for the selection
-    const range = document.createRange();
+    const descriptionDiv = document.querySelector('div.jobs-description__content, div.jobs-description-content');
 
-    // Start from the beginning of the content span
-    range.setStartBefore(contentSpan.firstChild || contentSpan);
-
-    // End at the hr separator if it exists, otherwise end of content span
-    if (hrSeparator) {
-      range.setEndBefore(hrSeparator);
-    } else {
-      range.setEndAfter(contentSpan.lastChild || contentSpan);
+    if (!descriptionDiv) {
+      console.warn('LinkedIn Job Quick Select: Could not find job description content with either method');
+      return;
     }
+
+    // Create a range for the entire description div
+    const range = document.createRange();
+    range.selectNodeContents(descriptionDiv);
 
     // Apply the selection
     const selection = window.getSelection();
     selection.removeAllRanges();
     selection.addRange(range);
 
-    // Scroll to the top of the selected content
-    aboutJobHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    // Scroll to the selected content
+    descriptionDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    console.log('LinkedIn Job Quick Select: Text selected successfully');
+    console.log('LinkedIn Job Quick Select: Text selected successfully (fallback method)');
 
   } catch (error) {
     console.error('LinkedIn Job Quick Select: Error selecting text', error);
