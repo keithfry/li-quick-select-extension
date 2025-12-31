@@ -5,19 +5,51 @@ let listenerState = {
   registrationCount: 0
 };
 
+// Current keyboard shortcut (loaded from storage)
+let currentShortcut = null;
+
+// Load keyboard shortcut from storage
+async function initializeShortcut() {
+  try {
+    currentShortcut = await getShortcut();
+    console.log('LinkedIn Job Quick Select: Loaded shortcut', currentShortcut);
+  } catch (error) {
+    console.error('LinkedIn Job Quick Select: Error loading shortcut, using default', error);
+    currentShortcut = DEFAULT_SHORTCUT;
+  }
+}
+
 // Main keyboard handler function
 function handleKeyboardShortcut(e) {
   console.log('LinkedIn Job Quick Select: Keyboard event received', {
     key: e.key,
+    code: e.code,
     altKey: e.altKey,
+    ctrlKey: e.ctrlKey,
     shiftKey: e.shiftKey,
+    metaKey: e.metaKey,
     activeElement: document.activeElement?.tagName
   });
 
   listenerState.lastEventTime = Date.now();
 
-  // Check for Option (Alt) + Shift + S
-  if (e.altKey && e.shiftKey && (e.key === 'S' || e.key === 's' || e.code === 'KeyS')) {
+  // Safety check - ensure shortcut is loaded
+  if (!currentShortcut) {
+    console.warn('LinkedIn Job Quick Select: Shortcut not yet loaded');
+    return;
+  }
+
+  // Check if current key combination matches the configured shortcut
+  const matches = (
+    e.key === currentShortcut.key || e.code === currentShortcut.code
+  ) && (
+    e.altKey === currentShortcut.altKey &&
+    e.ctrlKey === currentShortcut.ctrlKey &&
+    e.shiftKey === currentShortcut.shiftKey &&
+    e.metaKey === currentShortcut.metaKey
+  );
+
+  if (matches) {
     // Don't interfere if user is typing in input fields
     const activeElement = document.activeElement;
     if (activeElement && (
@@ -62,8 +94,10 @@ function registerKeyboardListener() {
     listenerState.registrationCount + ')');
 }
 
-// Initial registration
-registerKeyboardListener();
+// Initialize shortcut from storage, then register listener
+initializeShortcut().then(() => {
+  registerKeyboardListener();
+});
 
 // Monitor DOM changes to detect SPA navigation
 function setupSpaNavigationMonitoring() {
@@ -111,6 +145,14 @@ function startListenerHealthCheck() {
 }
 
 startListenerHealthCheck();
+
+// Listen for shortcut changes from options page
+chrome.storage.onChanged.addListener((changes, areaName) => {
+  if (areaName === 'local' && changes.keyboardShortcut) {
+    console.log('LinkedIn Job Quick Select: Shortcut changed', changes.keyboardShortcut.newValue);
+    currentShortcut = changes.keyboardShortcut.newValue;
+  }
+});
 
 function selectAboutTheJobSection() {
   try {

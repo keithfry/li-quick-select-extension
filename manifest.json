@@ -1,12 +1,18 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn Job Quick Select",
-  "version": "1.1",
-  "description": "Quickly select 'About the job' section on LinkedIn with Option+Shift+S",
+  "version": "1.2",
+  "description": "Quickly select 'About the job' section on LinkedIn with a customizable keyboard shortcut",
+  "permissions": ["storage"],
+  "options_page": "options.html",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "LinkedIn Job Quick Select"
+  },
   "content_scripts": [
     {
       "matches": ["*://*.linkedin.com/jobs/*"],
-      "js": ["content.js"],
+      "js": ["storage.js", "content.js"],
       "run_at": "document_idle"
     }
   ]

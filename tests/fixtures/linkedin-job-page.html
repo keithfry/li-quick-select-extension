@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mock LinkedIn Job Page</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 20px;
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    h2 {
+      font-size: 20px;
+      margin-bottom: 16px;
+    }
+    .jobs-description__content,
+    .jobs-description-content {
+      margin: 20px 0;
+      padding: 20px;
+      background: #f3f2f0;
+      border-radius: 8px;
+    }
+    span[data-testid="expandable-text-box"] {
+      display: block;
+      line-height: 1.6;
+    }
+    hr {
+      margin: 20px 0;
+      border: none;
+      border-top: 1px solid #ccc;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .contenteditable-div {
+      width: 100%;
+      min-height: 50px;
+      padding: 8px;
+      margin: 10px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      background: white;
+    }
+  </style>
+</head>
+<body>
+  <!-- Scenario 1: Standard LinkedIn job page layout -->
+  <h1>Senior Software Engineer</h1>
+  <p>Google - Mountain View, CA</p>
+
+  <!-- "About the job" section with expandable text box -->
+  <h2>About the job</h2>
+  <div>
+    <span data-testid="expandable-text-box">
+      <p><strong>Job Description:</strong></p>
+      <p>We're looking for an exceptional Senior Software Engineer to join our team. You'll be working on cutting-edge technology that impacts billions of users worldwide.</p>
+
+      <p><strong>Responsibilities:</strong></p>
+      <ul>
+        <li>Design, develop, test, deploy, maintain, and improve software</li>
+        <li>Manage individual project priorities, deadlines, and deliverables</li>
+        <li>Write clean, maintainable code following best practices</li>
+        <li>Participate in code reviews and provide constructive feedback</li>
+        <li>Collaborate with cross-functional teams</li>
+      </ul>
+
+      <p><strong>Minimum Qualifications:</strong></p>
+      <ul>
+        <li>5+ years of software development experience</li>
+        <li>Strong proficiency in JavaScript, TypeScript, React, and Node.js</li>
+        <li>Experience with modern web technologies and frameworks</li>
+        <li>Excellent problem-solving and communication skills</li>
+      </ul>
+
+      <p><strong>Preferred Qualifications:</strong></p>
+      <ul>
+        <li>Experience with Chrome extensions or browser APIs</li>
+        <li>Knowledge of automated testing frameworks (Playwright, Jest, etc.)</li>
+        <li>Experience with CI/CD pipelines</li>
+        <li>Contributions to open source projects</li>
+      </ul>
+    </span>
+    <hr>
+    <p>Additional information below the separator...</p>
+  </div>
+
+  <!-- Scenario 2: Fallback layout for older LinkedIn pages -->
+  <div class="jobs-description__content">
+    <h3>Fallback Layout Job Description</h3>
+    <p>This is a fallback layout used when the primary expandable-text-box selector is not found.</p>
+    <p>The extension should still be able to select this content using the fallback method.</p>
+    <ul>
+      <li>Fallback item 1</li>
+      <li>Fallback item 2</li>
+      <li>Fallback item 3</li>
+    </ul>
+  </div>
+
+  <!-- Alternative fallback class name -->
+  <div class="jobs-description-content">
+    <h3>Alternative Fallback Layout</h3>
+    <p>Some LinkedIn pages may use a slightly different class name.</p>
+  </div>
+
+  <!-- Input elements for testing "ignore when typing" behavior -->
+  <div style="margin-top: 40px;">
+    <h2>Test Input Elements (Should Ignore Keyboard Shortcuts)</h2>
+
+    <label for="search-input">Search Input:</label>
+    <input type="text" id="search-input" placeholder="Type here to test..." />
+
+    <label for="message-textarea">Message Textarea:</label>
+    <textarea id="message-textarea" rows="4" placeholder="Type here to test..."></textarea>
+
+    <label>ContentEditable Div:</label>
+    <div class="contenteditable-div" contenteditable="true">
+      Click here and type to test contentEditable...
+    </div>
+  </div>
+
+  <!-- Additional realistic LinkedIn page elements -->
+  <div style="margin-top: 40px;">
+    <h2>Skills</h2>
+    <ul>
+      <li>JavaScript</li>
+      <li>React</li>
+      <li>Node.js</li>
+      <li>TypeScript</li>
+      <li>Playwright</li>
+    </ul>
+  </div>
+
+  <div style="margin-top: 20px;">
+    <h2>About the company</h2>
+    <p>Google is a multinational technology company that specializes in Internet-related services and products...</p>
+  </div>
+</body>
+</html>
