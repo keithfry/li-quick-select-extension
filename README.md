@@ -48,7 +48,7 @@ The extension includes comprehensive debug logging to help troubleshoot issues.
 
 ### Enabling/Disabling Debug Logs
 
-Debug logging is **enabled by default**. To control it:
+Debug logging is **disabled by default**. To control it:
 
 #### From the Browser Console
 
@@ -59,27 +59,27 @@ Debug logging is **enabled by default**. To control it:
 2. Type one of the following commands:
 
 ```javascript
-// Disable all debug logging
-window.LinkedInJobQuickSelect.debugEnabled = false
-
 // Enable all debug logging
 window.LinkedInJobQuickSelect.debugEnabled = true
+
+// Disable all debug logging
+window.LinkedInJobQuickSelect.debugEnabled = false
 ```
 
 #### Permanent Configuration
 
-To permanently disable debug logging, edit the files:
+To permanently enable debug logging, edit the files:
 
-**In `storage.js`, `content.js`, and `options.js`:**
+**In `storage.js` and `options.js`:**
 
 Change:
 ```javascript
-window.LinkedInJobQuickSelect.debugEnabled = true;
+window.LinkedInJobQuickSelect.debugEnabled = false;
 ```
 
 To:
 ```javascript
-window.LinkedInJobQuickSelect.debugEnabled = false;
+window.LinkedInJobQuickSelect.debugEnabled = true;
 ```
 
 ### Understanding Debug Logs

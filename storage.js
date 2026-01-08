@@ -3,7 +3,7 @@
 // Debug configuration (shared with content.js)
 window.LinkedInJobQuickSelect = window.LinkedInJobQuickSelect || {};
 if (typeof window.LinkedInJobQuickSelect.debugEnabled === 'undefined') {
-  window.LinkedInJobQuickSelect.debugEnabled = true; // Set to false to disable all logging
+  window.LinkedInJobQuickSelect.debugEnabled = false; // Set to true to enable debug logging
 }
 
 /**
