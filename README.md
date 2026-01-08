@@ -114,6 +114,33 @@ To see only extension logs, use the Console filter:
 LinkedIn Job Quick Select
 ```
 
+### Console Helper Functions
+
+The extension exposes helper functions for debugging:
+
+#### Check Extension Status
+
+```javascript
+LinkedInJobQuickSelect.checkStatus()
+```
+
+This displays:
+- Whether listeners are registered
+- Current keyboard shortcut
+- Active element details
+- Document focus status
+- Current URL and page type
+
+#### Force Re-register Listeners
+
+If the shortcut stops working after navigation:
+
+```javascript
+LinkedInJobQuickSelect.forceReregister()
+```
+
+This manually re-registers the keyboard listeners.
+
 ## File Structure
 
 ```

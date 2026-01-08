@@ -10,7 +10,9 @@ debugLog('log', 'Content script loaded!', {
 
 // Check if we're on a job page
 function isJobPage() {
-  return window.location.href.includes('/jobs/');
+  const url = window.location.href;
+  // Match /jobs, /jobs/, /jobs?, /jobs#, etc.
+  return url.includes('/jobs/') || url.includes('/jobs?') || url.includes('/jobs#') || url.match(/\/jobs$/);
 }
 
 // Log page type
@@ -43,6 +45,8 @@ async function initializeShortcut() {
 
 // Main keyboard handler function
 function handleKeyboardShortcut(e) {
+  const activeElement = document.activeElement;
+
   debugLog('log', 'Keyboard event received', {
     key: e.key,
     code: e.code,
@@ -50,7 +54,10 @@ function handleKeyboardShortcut(e) {
     ctrlKey: e.ctrlKey,
     shiftKey: e.shiftKey,
     metaKey: e.metaKey,
-    activeElement: document.activeElement?.tagName
+    activeElement: activeElement?.tagName,
+    activeElementId: activeElement?.id,
+    activeElementClass: activeElement?.className,
+    isContentEditable: activeElement?.isContentEditable
   });
 
   listenerState.lastEventTime = Date.now();
@@ -73,13 +80,18 @@ function handleKeyboardShortcut(e) {
 
   if (matches) {
     // Don't interfere if user is typing in input fields
-    const activeElement = document.activeElement;
+    // BUT: Allow the shortcut if user is just on a search field that's not being actively edited
     if (activeElement && (
       activeElement.tagName === 'INPUT' ||
       activeElement.tagName === 'TEXTAREA' ||
       activeElement.isContentEditable
     )) {
-      debugLog('log', 'Ignoring - user is typing');
+      debugLog('log', 'Ignoring - user is in an editable field', {
+        tag: activeElement.tagName,
+        type: activeElement.type,
+        id: activeElement.id,
+        class: activeElement.className
+      });
       return;
     }
 
@@ -173,16 +185,32 @@ const urlObserver = new MutationObserver(() => {
     debugLog('log', 'URL changed', {
       from: lastUrl,
       to: currentUrl,
-      isJobPage: isJobPage()
+      isJobPage: isJobPage(),
+      activeElement: document.activeElement?.tagName,
+      hasFocus: document.hasFocus()
     });
     lastUrl = currentUrl;
 
     // Re-initialize when navigating to a job page
     if (isJobPage()) {
-      debugLog('log', 'Navigated to job page, re-initializing...');
+      debugLog('log', 'Navigated to job page, re-initializing...', {
+        activeElement: document.activeElement?.tagName,
+        activeElementId: document.activeElement?.id,
+        documentHasFocus: document.hasFocus()
+      });
+
+      // Re-register immediately
+      debugLog('log', 'Re-registering listener immediately after navigation');
+      registerKeyboardListener();
+
+      // Also re-register after a delay to ensure page is stable
       setTimeout(() => {
+        debugLog('log', 'Re-registering listener after navigation delay', {
+          activeElement: document.activeElement?.tagName,
+          documentHasFocus: document.hasFocus()
+        });
         registerKeyboardListener();
-      }, 1000); // Small delay to let page stabilize
+      }, 500); // Reduced delay - register again after 500ms
     }
   }
 });
@@ -194,6 +222,60 @@ urlObserver.observe(document.body, {
 });
 
 debugLog('log', 'URL observer active');
+
+// Add a permanent diagnostic listener to verify keyboard events are being captured
+// This runs independently of our main handler
+let lastDiagnosticLog = 0;
+const diagnosticListener = (e) => {
+  // Throttle to avoid spam (max once per second)
+  const now = Date.now();
+  if (now - lastDiagnosticLog < 1000) return;
+  lastDiagnosticLog = now;
+
+  debugLog('log', 'DIAGNOSTIC - Keydown event captured at document level', {
+    key: e.key,
+    code: e.code,
+    target: e.target?.tagName,
+    activeElement: document.activeElement?.tagName,
+    documentHasFocus: document.hasFocus(),
+    eventPhase: e.eventPhase,
+    bubbles: e.bubbles
+  });
+};
+
+document.addEventListener('keydown', diagnosticListener, { capture: true });
+debugLog('log', 'Diagnostic listener active');
+
+// Expose helper functions for debugging from console
+window.LinkedInJobQuickSelect.checkStatus = function() {
+  const status = {
+    registered: listenerState.registered,
+    registrationCount: listenerState.registrationCount,
+    lastEventTime: listenerState.lastEventTime,
+    isJobPage: isJobPage(),
+    currentUrl: window.location.href,
+    hasShortcut: currentShortcut !== null,
+    shortcut: currentShortcut,
+    activeElement: {
+      tagName: document.activeElement?.tagName,
+      id: document.activeElement?.id,
+      className: document.activeElement?.className,
+      isContentEditable: document.activeElement?.isContentEditable
+    },
+    documentHasFocus: document.hasFocus(),
+    debugEnabled: window.LinkedInJobQuickSelect.debugEnabled
+  };
+  console.log('LinkedIn Job Quick Select Status:', status);
+  return status;
+};
+
+window.LinkedInJobQuickSelect.forceReregister = function() {
+  debugLog('log', 'Manual re-registration requested from console');
+  registerKeyboardListener();
+  console.log('Listeners re-registered. Try your shortcut now.');
+};
+
+debugLog('log', 'Helper functions exposed: LinkedInJobQuickSelect.checkStatus() and LinkedInJobQuickSelect.forceReregister()');
 
 // Periodic health check
 function startListenerHealthCheck() {
