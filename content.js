@@ -159,6 +159,12 @@ async function initialize() {
 
     debugLog('log', 'Dependencies verified, initializing...');
 
+    // Ensure body is focusable to receive keyboard events
+    if (!document.body.hasAttribute('tabindex')) {
+      document.body.setAttribute('tabindex', '-1');
+      debugLog('log', 'Set body tabindex to -1 to enable keyboard event capture');
+    }
+
     await initializeShortcut();
     debugLog('log', 'Shortcut initialized, registering listener...');
     registerKeyboardListener();
@@ -199,6 +205,18 @@ const urlObserver = new MutationObserver(() => {
         documentHasFocus: document.hasFocus()
       });
 
+      // CRITICAL FIX: Ensure keyboard events can be captured by giving focus to the document
+      // Without focus, keyboard events don't propagate through the DOM
+      if (!document.hasFocus() || !document.activeElement || document.activeElement === document.body) {
+        debugLog('log', 'Document has no focus - focusing body to enable keyboard events');
+        // Focus the body to ensure keyboard events are dispatched
+        document.body.focus();
+        // Also set tabindex to make body focusable if needed
+        if (!document.body.hasAttribute('tabindex')) {
+          document.body.setAttribute('tabindex', '-1');
+        }
+      }
+
       // Re-register immediately
       debugLog('log', 'Re-registering listener immediately after navigation');
       registerKeyboardListener();
@@ -209,6 +227,13 @@ const urlObserver = new MutationObserver(() => {
           activeElement: document.activeElement?.tagName,
           documentHasFocus: document.hasFocus()
         });
+
+        // Double-check focus again after delay
+        if (!document.hasFocus() || document.activeElement === document.body) {
+          debugLog('log', 'Still no focus after delay - forcing body focus again');
+          document.body.focus();
+        }
+
         registerKeyboardListener();
       }, 500); // Reduced delay - register again after 500ms
     }

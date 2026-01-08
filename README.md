@@ -179,9 +179,17 @@ li-quick-select-extension/
 
 ### The extension loaded but keyboard events aren't detected
 
-1. **Reload the LinkedIn page** - Sometimes initial load fails
-2. **Check for conflicting extensions** - Disable other keyboard shortcut extensions temporarily
-3. **Try a different shortcut** - Some shortcuts may be captured by other software
+This typically happens after SPA (Single Page Application) navigation when no element has focus.
+
+**Automatic Fix**: The extension now automatically focuses the document body after navigation to enable keyboard event capture.
+
+If it still doesn't work:
+
+1. **Click anywhere on the page** - This gives focus and enables keyboard events
+2. **Reload the LinkedIn page** - Sometimes initial load fails
+3. **Use the console helper**: Run `LinkedInJobQuickSelect.forceReregister()` to manually re-register
+4. **Check for conflicting extensions** - Disable other keyboard shortcut extensions temporarily
+5. **Try a different shortcut** - Some shortcuts may be captured by other software
 
 ### Listener registration count is very high
 
