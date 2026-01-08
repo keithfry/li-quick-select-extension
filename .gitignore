@@ -16,3 +16,7 @@ Thumbs.db
 node_modules/
 package-lock.json
 yarn.lock
+
+# Playwright test artifacts
+playwright-report/
+test-results/
