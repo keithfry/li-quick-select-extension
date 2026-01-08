@@ -1,25 +1,18 @@
-# Dependencies
-node_modules/
-
-# Playwright
-test-results/
-playwright-report/
-playwright/.cache/
+# Test outputs
+test-output.log
 
 # OS files
 .DS_Store
 Thumbs.db
 
-# IDE
+# Editor files
 .vscode/
 .idea/
 *.swp
 *.swo
+*~
 
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Test coverage
-coverage/
+# Package files (if using npm/yarn in the future)
+node_modules/
+package-lock.json
+yarn.lock
