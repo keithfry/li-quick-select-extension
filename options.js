@@ -1,5 +1,30 @@
 // Options page logic for keyboard shortcut recorder
 
+// Debug configuration
+window.LinkedInJobQuickSelect = window.LinkedInJobQuickSelect || {};
+if (typeof window.LinkedInJobQuickSelect.debugEnabled === 'undefined') {
+  window.LinkedInJobQuickSelect.debugEnabled = true; // Set to false to disable all logging
+}
+
+/**
+ * Centralized debug logging function
+ * @param {string} level - Log level: 'log', 'warn', 'error'
+ * @param {string} message - The message to log
+ * @param {*} data - Optional data to log
+ */
+function debugLog(level, message, data = null) {
+  if (!window.LinkedInJobQuickSelect.debugEnabled) return;
+
+  const prefix = 'LinkedIn Job Quick Select:';
+  const fullMessage = `${prefix} ${message}`;
+
+  if (data !== null) {
+    console[level](fullMessage, data);
+  } else {
+    console[level](fullMessage);
+  }
+}
+
 let isRecording = false;
 let currentShortcut = null;
 
@@ -161,7 +186,7 @@ function captureShortcut(event) {
       stopRecording();
     })
     .catch((error) => {
-      console.error('Error saving shortcut:', error);
+      debugLog('error', 'Error saving shortcut:', error);
       showStatus('Failed to save shortcut. Please try again.', 'error');
       stopRecording();
     });
@@ -178,7 +203,7 @@ function resetToDefault() {
       showStatus('Reset to default shortcut', 'success');
     })
     .catch((error) => {
-      console.error('Error resetting shortcut:', error);
+      debugLog('error', 'Error resetting shortcut:', error);
       showStatus('Failed to reset shortcut. Please try again.', 'error');
     });
 }
@@ -191,7 +216,7 @@ async function loadCurrentShortcut() {
     currentShortcut = await getShortcut();
     shortcutDisplay.value = formatShortcutDisplay(currentShortcut);
   } catch (error) {
-    console.error('Error loading shortcut:', error);
+    debugLog('error', 'Error loading shortcut:', error);
     currentShortcut = DEFAULT_SHORTCUT;
     shortcutDisplay.value = formatShortcutDisplay(DEFAULT_SHORTCUT);
   }

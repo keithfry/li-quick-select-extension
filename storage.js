@@ -1,5 +1,32 @@
 // Storage utilities for keyboard shortcut management
 
+// Debug configuration (shared with content.js)
+window.LinkedInJobQuickSelect = window.LinkedInJobQuickSelect || {};
+if (typeof window.LinkedInJobQuickSelect.debugEnabled === 'undefined') {
+  window.LinkedInJobQuickSelect.debugEnabled = true; // Set to false to disable all logging
+}
+
+/**
+ * Centralized debug logging function
+ * @param {string} level - Log level: 'log', 'warn', 'error'
+ * @param {string} message - The message to log
+ * @param {*} data - Optional data to log
+ */
+function debugLog(level, message, data = null) {
+  if (!window.LinkedInJobQuickSelect.debugEnabled) return;
+
+  const prefix = 'LinkedIn Job Quick Select:';
+  const fullMessage = `${prefix} ${message}`;
+
+  if (data !== null) {
+    console[level](fullMessage, data);
+  } else {
+    console[level](fullMessage);
+  }
+}
+
+debugLog('log', 'storage.js loaded');
+
 const DEFAULT_SHORTCUT = {
   key: 'S',
   code: 'KeyS',
@@ -8,6 +35,8 @@ const DEFAULT_SHORTCUT = {
   shiftKey: true,
   metaKey: false
 };
+
+debugLog('log', 'DEFAULT_SHORTCUT defined', DEFAULT_SHORTCUT);
 
 // Reserved browser shortcuts that should be blocked
 const BLOCKED_SHORTCUTS = [
@@ -35,7 +64,7 @@ async function getShortcut() {
   return new Promise((resolve) => {
     chrome.storage.local.get(['keyboardShortcut'], (result) => {
       if (chrome.runtime.lastError) {
-        console.warn('Error loading shortcut, using default:', chrome.runtime.lastError);
+        debugLog('warn', 'Error loading shortcut, using default:', chrome.runtime.lastError);
         resolve(DEFAULT_SHORTCUT);
       } else {
         resolve(result.keyboardShortcut || DEFAULT_SHORTCUT);

@@ -1,3 +1,24 @@
+// Debug logging is defined in storage.js (loaded first)
+// debugLog(level, message, data) is available
+
+// IMMEDIATE LOG: Prove the script is loaded
+debugLog('log', 'Content script loaded!', {
+  url: window.location.href,
+  readyState: document.readyState,
+  timestamp: new Date().toISOString()
+});
+
+// Check if we're on a job page
+function isJobPage() {
+  return window.location.href.includes('/jobs/');
+}
+
+// Log page type
+debugLog('log', 'Page type check', {
+  isJobPage: isJobPage(),
+  pathname: window.location.pathname
+});
+
 // State tracking for debugging
 let listenerState = {
   registered: false,
@@ -11,17 +32,18 @@ let currentShortcut = null;
 // Load keyboard shortcut from storage
 async function initializeShortcut() {
   try {
+    debugLog('log', 'Attempting to load shortcut from storage...');
     currentShortcut = await getShortcut();
-    console.log('LinkedIn Job Quick Select: Loaded shortcut', currentShortcut);
+    debugLog('log', 'Loaded shortcut', currentShortcut);
   } catch (error) {
-    console.error('LinkedIn Job Quick Select: Error loading shortcut, using default', error);
+    debugLog('error', 'Error loading shortcut, using default', error);
     currentShortcut = DEFAULT_SHORTCUT;
   }
 }
 
 // Main keyboard handler function
 function handleKeyboardShortcut(e) {
-  console.log('LinkedIn Job Quick Select: Keyboard event received', {
+  debugLog('log', 'Keyboard event received', {
     key: e.key,
     code: e.code,
     altKey: e.altKey,
@@ -35,7 +57,7 @@ function handleKeyboardShortcut(e) {
 
   // Safety check - ensure shortcut is loaded
   if (!currentShortcut) {
-    console.warn('LinkedIn Job Quick Select: Shortcut not yet loaded');
+    debugLog('warn', 'Shortcut not yet loaded');
     return;
   }
 
@@ -57,11 +79,11 @@ function handleKeyboardShortcut(e) {
       activeElement.tagName === 'TEXTAREA' ||
       activeElement.isContentEditable
     )) {
-      console.log('LinkedIn Job Quick Select: Ignoring - user is typing');
+      debugLog('log', 'Ignoring - user is typing');
       return;
     }
 
-    console.log('LinkedIn Job Quick Select: Shortcut activated');
+    debugLog('log', 'Shortcut activated');
     e.preventDefault();
     e.stopPropagation(); // Prevent LinkedIn handlers from interfering
     e.stopImmediatePropagation(); // Stop other listeners on same element
@@ -69,78 +91,122 @@ function handleKeyboardShortcut(e) {
   }
 }
 
+// Listener options (reuse for proper add/remove)
+const listenerOptions = {
+  capture: true,  // Critical: intercept before LinkedIn
+  passive: false  // Allow preventDefault()
+};
+
 // Register keyboard listener with capturing phase
 function registerKeyboardListener() {
-  // Remove existing listeners to avoid duplicates
-  document.removeEventListener('keydown', handleKeyboardShortcut, true);
-  window.removeEventListener('keydown', handleKeyboardShortcut, true);
+  // Remove existing listeners to avoid duplicates (must use same options)
+  document.removeEventListener('keydown', handleKeyboardShortcut, listenerOptions);
+  window.removeEventListener('keydown', handleKeyboardShortcut, listenerOptions);
 
   // Register in CAPTURE phase (runs before LinkedIn's bubble-phase handlers)
-  document.addEventListener('keydown', handleKeyboardShortcut, {
-    capture: true,  // Critical: intercept before LinkedIn
-    passive: false  // Allow preventDefault()
-  });
+  document.addEventListener('keydown', handleKeyboardShortcut, listenerOptions);
 
   // Redundant listener on window as fallback
-  window.addEventListener('keydown', handleKeyboardShortcut, {
-    capture: true,
-    passive: false
-  });
+  window.addEventListener('keydown', handleKeyboardShortcut, listenerOptions);
 
   listenerState.registered = true;
   listenerState.registrationCount++;
 
-  console.log('LinkedIn Job Quick Select: Listeners registered (count: ' +
-    listenerState.registrationCount + ')');
+  debugLog('log', `Listeners registered (count: ${listenerState.registrationCount})`);
+  debugLog('log', 'Current shortcut:', currentShortcut);
+  debugLog('log', 'Testing listener... Press any key to verify');
+
+  // Add a simple test listener to verify events are being captured
+  const testListener = (e) => {
+    debugLog('log', `TEST - Key event detected! ${e.key} ${e.code}`);
+  };
+  document.addEventListener('keydown', testListener, listenerOptions);
+
+  // Remove test listener after 5 seconds
+  setTimeout(() => {
+    document.removeEventListener('keydown', testListener, listenerOptions);
+    debugLog('log', 'Test listener removed');
+  }, 5000);
 }
 
-// Initialize shortcut from storage, then register listener
-initializeShortcut().then(() => {
-  registerKeyboardListener();
+// Main initialization function
+async function initialize() {
+  try {
+    debugLog('log', 'Starting initialization...');
+
+    // Verify storage.js is loaded
+    if (typeof getShortcut === 'undefined') {
+      debugLog('error', 'ERROR - storage.js not loaded! getShortcut is undefined');
+      throw new Error('storage.js not loaded');
+    }
+
+    if (typeof DEFAULT_SHORTCUT === 'undefined') {
+      debugLog('error', 'ERROR - DEFAULT_SHORTCUT is undefined');
+      throw new Error('DEFAULT_SHORTCUT not defined');
+    }
+
+    debugLog('log', 'Dependencies verified, initializing...');
+
+    await initializeShortcut();
+    debugLog('log', 'Shortcut initialized, registering listener...');
+    registerKeyboardListener();
+    debugLog('log', 'Listener registration complete');
+
+  } catch (error) {
+    debugLog('error', 'Initialization failed', error);
+    // Register with default shortcut as fallback
+    currentShortcut = DEFAULT_SHORTCUT;
+    registerKeyboardListener();
+  }
+}
+
+// Initialize on load
+initialize().catch((error) => {
+  debugLog('error', 'FATAL ERROR during initialization', error);
 });
 
-// Monitor DOM changes to detect SPA navigation
-function setupSpaNavigationMonitoring() {
-  const targetNode = document.body;
+// Handle SPA navigation (URL changes without page reload)
+let lastUrl = window.location.href;
+const urlObserver = new MutationObserver(() => {
+  const currentUrl = window.location.href;
+  if (currentUrl !== lastUrl) {
+    debugLog('log', 'URL changed', {
+      from: lastUrl,
+      to: currentUrl,
+      isJobPage: isJobPage()
+    });
+    lastUrl = currentUrl;
 
-  const observer = new MutationObserver((mutations) => {
-    // Check if significant DOM changes occurred
-    const hasSignificantChanges = mutations.some(mutation =>
-      mutation.type === 'childList' && mutation.addedNodes.length > 0
-    );
-
-    if (hasSignificantChanges) {
-      console.log('LinkedIn Job Quick Select: DOM mutation detected, re-registering');
-      registerKeyboardListener();
+    // Re-initialize when navigating to a job page
+    if (isJobPage()) {
+      debugLog('log', 'Navigated to job page, re-initializing...');
+      setTimeout(() => {
+        registerKeyboardListener();
+      }, 1000); // Small delay to let page stabilize
     }
-  });
+  }
+});
 
-  observer.observe(targetNode, {
-    childList: true,
-    subtree: true
-  });
+// Start observing URL changes
+urlObserver.observe(document.body, {
+  childList: true,
+  subtree: true
+});
 
-  console.log('LinkedIn Job Quick Select: SPA monitoring active');
-}
-
-// Start monitoring after brief delay
-setTimeout(setupSpaNavigationMonitoring, 1000);
+debugLog('log', 'URL observer active');
 
 // Periodic health check
 function startListenerHealthCheck() {
   setInterval(() => {
-    console.log('LinkedIn Job Quick Select: Health check', {
+    debugLog('log', 'Health check', {
       registered: listenerState.registered,
       registrationCount: listenerState.registrationCount,
-      lastEventTime: listenerState.lastEventTime
+      lastEventTime: listenerState.lastEventTime,
+      isJobPage: isJobPage(),
+      currentUrl: window.location.href,
+      hasShortcut: currentShortcut !== null,
+      shortcut: currentShortcut
     });
-
-    // Preemptive re-registration if we're on a job page
-    if (listenerState.registrationCount === 1 &&
-        document.querySelector('[data-testid="expandable-text-box"]')) {
-      console.log('LinkedIn Job Quick Select: Preemptive re-registration');
-      registerKeyboardListener();
-    }
   }, 30000); // Every 30 seconds
 }
 
@@ -149,7 +215,7 @@ startListenerHealthCheck();
 // Listen for shortcut changes from options page
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === 'local' && changes.keyboardShortcut) {
-    console.log('LinkedIn Job Quick Select: Shortcut changed', changes.keyboardShortcut.newValue);
+    debugLog('log', 'Shortcut changed', changes.keyboardShortcut.newValue);
     currentShortcut = changes.keyboardShortcut.newValue;
   }
 });
@@ -196,17 +262,17 @@ function selectAboutTheJobSection() {
       // Scroll to the top of the selected content
       aboutJobHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-      console.log('LinkedIn Job Quick Select: Text selected successfully (primary method)');
+      debugLog('log', 'Text selected successfully (primary method)');
       return;
     }
 
     // Fallback method: look for jobs-description content divs
-    console.log('LinkedIn Job Quick Select: Trying fallback method...');
+    debugLog('log', 'Trying fallback method...');
 
     const descriptionDiv = document.querySelector('div.jobs-description__content, div.jobs-description-content');
 
     if (!descriptionDiv) {
-      console.warn('LinkedIn Job Quick Select: Could not find job description content with either method');
+      debugLog('warn', 'Could not find job description content with either method');
       return;
     }
 
@@ -222,9 +288,9 @@ function selectAboutTheJobSection() {
     // Scroll to the selected content
     descriptionDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-    console.log('LinkedIn Job Quick Select: Text selected successfully (fallback method)');
+    debugLog('log', 'Text selected successfully (fallback method)');
 
   } catch (error) {
-    console.error('LinkedIn Job Quick Select: Error selecting text', error);
+    debugLog('error', 'Error selecting text', error);
   }
 }
