@@ -3,7 +3,10 @@
   "name": "LinkedIn Job Quick Select",
   "version": "1.2",
   "description": "Quickly select 'About the job' section on LinkedIn with a customizable keyboard shortcut",
-  "permissions": ["storage"],
+  "permissions": ["storage", "windows", "tabs"],
+  "background": {
+    "service_worker": "background.js"
+  },
   "options_page": "options.html",
   "action": {
     "default_popup": "popup.html",

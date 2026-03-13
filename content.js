@@ -369,6 +369,43 @@ function startListenerHealthCheck() {
 
 startListenerHealthCheck();
 
+// Listen for messages from the background service worker
+chrome.runtime.onMessage.addListener((message) => {
+  if (message.action === 'selectJobDescription') {
+    debugLog('log', 'Received selectJobDescription from background — polling for content');
+    waitForContentAndSelect();
+  }
+});
+
+// Poll for job description content then select it (used after background opens a new tab/window)
+function waitForContentAndSelect() {
+  const maxWait = 20000;
+  const pollInterval = 500;
+  let elapsed = 0;
+
+  const poll = setInterval(() => {
+    elapsed += pollInterval;
+
+    if (elapsed >= maxWait) {
+      clearInterval(poll);
+      debugLog('warn', 'Timed out waiting for job description content');
+      return;
+    }
+
+    const contentReady = !!(
+      document.querySelector('span[data-testid="expandable-text-box"]') ||
+      document.querySelector('div.jobs-description__content') ||
+      document.querySelector('div.jobs-description-content')
+    );
+
+    if (contentReady) {
+      clearInterval(poll);
+      debugLog('log', 'Content ready — selecting job description');
+      selectAboutTheJobSection();
+    }
+  }, pollInterval);
+}
+
 // Listen for shortcut changes from options page
 chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === 'local') {
@@ -399,60 +436,12 @@ function openAndSelectInNewWindow() {
       return;
     }
 
-    // noopener is intentionally omitted — we need the window reference to poll and
-    // call selectAboutTheJobSection() once the content has loaded.
-    // Passing width/height forces a real window; omitting them opens a tab.
-    const features = currentOpenTarget === 'window' ? 'width=1200,height=900' : '';
-    const newWin = window.open(titleLink.href, '_blank', features);
-    if (!newWin) {
-      debugLog('warn', 'New window was blocked by the browser');
-      return;
-    }
-
-    debugLog('log', 'Opened new window, polling for content...', titleLink.href);
-
-    const maxWait = 20000; // 20 second timeout
-    const pollInterval = 500;
-    let elapsed = 0;
-
-    const poll = setInterval(() => {
-      elapsed += pollInterval;
-
-      if (elapsed >= maxWait) {
-        clearInterval(poll);
-        debugLog('warn', 'Timed out waiting for new window content to load');
-        return;
-      }
-
-      try {
-        if (newWin.closed) {
-          clearInterval(poll);
-          return;
-        }
-
-        const winReady = newWin.document.readyState === 'complete';
-        const fnReady = newWin.LinkedInJobQuickSelect &&
-          typeof newWin.LinkedInJobQuickSelect.selectAboutTheJobSection === 'function';
-        // Wait for the job description content to actually be in the DOM
-        const contentReady = !!(
-          newWin.document.querySelector('span[data-testid="expandable-text-box"]') ||
-          newWin.document.querySelector('div.jobs-description__content') ||
-          newWin.document.querySelector('div.jobs-description-content')
-        );
-
-        debugLog('log', `Poll ${elapsed}ms: winReady=${winReady} fnReady=${fnReady} contentReady=${contentReady}`);
-
-        if (winReady && fnReady && contentReady) {
-          clearInterval(poll);
-          debugLog('log', 'New window ready — selecting job description text');
-          newWin.LinkedInJobQuickSelect.selectAboutTheJobSection();
-        }
-      } catch (err) {
-        // Cross-origin error or window closed unexpectedly
-        clearInterval(poll);
-        debugLog('warn', 'Lost access to new window', err);
-      }
-    }, pollInterval);
+    debugLog('log', 'Requesting background to open and select', titleLink.href);
+    chrome.runtime.sendMessage({
+      action: 'openWindowAndSelect',
+      url: titleLink.href,
+      target: currentOpenTarget
+    });
   } catch (error) {
     debugLog('error', 'Error in openAndSelectInNewWindow', error);
   }
@@ -481,9 +470,12 @@ function openJobTitleLink() {
       return;
     }
 
-    debugLog('log', 'Opening job title link', titleLink.href);
-    const features = currentOpenTarget === 'window' ? 'noopener,width=1200,height=900' : '';
-    window.open(titleLink.href, '_blank', features);
+    debugLog('log', 'Requesting background to open title link', titleLink.href);
+    chrome.runtime.sendMessage({
+      action: 'openWindow',
+      url: titleLink.href,
+      target: currentOpenTarget
+    });
   } catch (error) {
     debugLog('error', 'Error opening job title link', error);
   }
@@ -564,5 +556,3 @@ function selectAboutTheJobSection() {
   }
 }
 
-// Expose selectAboutTheJobSection so opener windows can call it cross-window
-window.LinkedInJobQuickSelect.selectAboutTheJobSection = selectAboutTheJobSection;
