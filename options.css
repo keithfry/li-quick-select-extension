@@ -190,6 +190,39 @@ label {
   font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
 }
 
+.open-target-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 8px;
+}
+
+.open-target-row label {
+  margin-bottom: 0;
+}
+
+.open-target-radios {
+  display: flex;
+  gap: 16px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+}
+
+.radio-label input[type="radio"] {
+  accent-color: #0073b1;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+
 .status-message {
   padding: 12px 16px;
   border-radius: 8px;

@@ -31,6 +31,15 @@ let listenerState = {
 // Current keyboard shortcut (loaded from storage)
 let currentShortcut = null;
 
+// Current job title shortcut (loaded from storage)
+let currentTitleShortcut = null;
+
+// Current combined shortcut — opens title in new window then selects text (loaded from storage)
+let currentCombinedShortcut = null;
+
+// Whether to open in a new window ('window') or new tab ('tab')
+let currentOpenTarget = 'window';
+
 // Load keyboard shortcut from storage
 async function initializeShortcut() {
   try {
@@ -40,6 +49,32 @@ async function initializeShortcut() {
   } catch (error) {
     debugLog('error', 'Error loading shortcut, using default', error);
     currentShortcut = DEFAULT_SHORTCUT;
+  }
+
+  try {
+    debugLog('log', 'Attempting to load title shortcut from storage...');
+    currentTitleShortcut = await getTitleShortcut();
+    debugLog('log', 'Loaded title shortcut', currentTitleShortcut);
+  } catch (error) {
+    debugLog('error', 'Error loading title shortcut, using default', error);
+    currentTitleShortcut = DEFAULT_TITLE_SHORTCUT;
+  }
+
+  try {
+    debugLog('log', 'Attempting to load combined shortcut from storage...');
+    currentCombinedShortcut = await getCombinedShortcut();
+    debugLog('log', 'Loaded combined shortcut', currentCombinedShortcut);
+  } catch (error) {
+    debugLog('error', 'Error loading combined shortcut, using default', error);
+    currentCombinedShortcut = DEFAULT_COMBINED_SHORTCUT;
+  }
+
+  try {
+    currentOpenTarget = await getOpenTarget();
+    debugLog('log', 'Loaded open target', currentOpenTarget);
+  } catch (error) {
+    debugLog('error', 'Error loading open target, using default', error);
+    currentOpenTarget = 'window';
   }
 }
 
@@ -68,19 +103,25 @@ function handleKeyboardShortcut(e) {
     return;
   }
 
-  // Check if current key combination matches the configured shortcut
-  const matches = (
-    e.key === currentShortcut.key || e.code === currentShortcut.code
-  ) && (
-    e.altKey === currentShortcut.altKey &&
-    e.ctrlKey === currentShortcut.ctrlKey &&
-    e.shiftKey === currentShortcut.shiftKey &&
-    e.metaKey === currentShortcut.metaKey
-  );
+  // Helper to test if an event matches a shortcut object
+  function shortcutMatches(shortcut) {
+    if (!shortcut) return false;
+    return (
+      e.key === shortcut.key || e.code === shortcut.code
+    ) && (
+      e.altKey === shortcut.altKey &&
+      e.ctrlKey === shortcut.ctrlKey &&
+      e.shiftKey === shortcut.shiftKey &&
+      e.metaKey === shortcut.metaKey
+    );
+  }
 
-  if (matches) {
+  const matchesMain = shortcutMatches(currentShortcut);
+  const matchesTitle = shortcutMatches(currentTitleShortcut);
+  const matchesCombined = shortcutMatches(currentCombinedShortcut);
+
+  if (matchesMain || matchesTitle || matchesCombined) {
     // Don't interfere if user is typing in input fields
-    // BUT: Allow the shortcut if user is just on a search field that's not being actively edited
     if (activeElement && (
       activeElement.tagName === 'INPUT' ||
       activeElement.tagName === 'TEXTAREA' ||
@@ -95,11 +136,20 @@ function handleKeyboardShortcut(e) {
       return;
     }
 
-    debugLog('log', 'Shortcut activated');
     e.preventDefault();
-    e.stopPropagation(); // Prevent LinkedIn handlers from interfering
-    e.stopImmediatePropagation(); // Stop other listeners on same element
-    selectAboutTheJobSection();
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+
+    if (matchesCombined) {
+      debugLog('log', 'Combined shortcut activated');
+      openAndSelectInNewWindow();
+    } else if (matchesMain) {
+      debugLog('log', 'Main shortcut activated');
+      selectAboutTheJobSection();
+    } else {
+      debugLog('log', 'Title shortcut activated');
+      openJobTitleLink();
+    }
   }
 }
 
@@ -321,11 +371,123 @@ startListenerHealthCheck();
 
 // Listen for shortcut changes from options page
 chrome.storage.onChanged.addListener((changes, areaName) => {
-  if (areaName === 'local' && changes.keyboardShortcut) {
-    debugLog('log', 'Shortcut changed', changes.keyboardShortcut.newValue);
-    currentShortcut = changes.keyboardShortcut.newValue;
+  if (areaName === 'local') {
+    if (changes.keyboardShortcut) {
+      debugLog('log', 'Shortcut changed', changes.keyboardShortcut.newValue);
+      currentShortcut = changes.keyboardShortcut.newValue;
+    }
+    if (changes.titleShortcut) {
+      debugLog('log', 'Title shortcut changed', changes.titleShortcut.newValue);
+      currentTitleShortcut = changes.titleShortcut.newValue;
+    }
+    if (changes.combinedShortcut) {
+      debugLog('log', 'Combined shortcut changed', changes.combinedShortcut.newValue);
+      currentCombinedShortcut = changes.combinedShortcut.newValue;
+    }
+    if (changes.openTarget) {
+      debugLog('log', 'Open target changed', changes.openTarget.newValue);
+      currentOpenTarget = changes.openTarget.newValue;
+    }
   }
 });
+
+function openAndSelectInNewWindow() {
+  try {
+    const titleLink = document.querySelector('a[href*="/jobs/view/"]');
+    if (!titleLink || !titleLink.href) {
+      debugLog('warn', 'Could not find job title link for open-and-select');
+      return;
+    }
+
+    // noopener is intentionally omitted — we need the window reference to poll and
+    // call selectAboutTheJobSection() once the content has loaded.
+    // Passing width/height forces a real window; omitting them opens a tab.
+    const features = currentOpenTarget === 'window' ? 'width=1200,height=900' : '';
+    const newWin = window.open(titleLink.href, '_blank', features);
+    if (!newWin) {
+      debugLog('warn', 'New window was blocked by the browser');
+      return;
+    }
+
+    debugLog('log', 'Opened new window, polling for content...', titleLink.href);
+
+    const maxWait = 20000; // 20 second timeout
+    const pollInterval = 500;
+    let elapsed = 0;
+
+    const poll = setInterval(() => {
+      elapsed += pollInterval;
+
+      if (elapsed >= maxWait) {
+        clearInterval(poll);
+        debugLog('warn', 'Timed out waiting for new window content to load');
+        return;
+      }
+
+      try {
+        if (newWin.closed) {
+          clearInterval(poll);
+          return;
+        }
+
+        const winReady = newWin.document.readyState === 'complete';
+        const fnReady = newWin.LinkedInJobQuickSelect &&
+          typeof newWin.LinkedInJobQuickSelect.selectAboutTheJobSection === 'function';
+        // Wait for the job description content to actually be in the DOM
+        const contentReady = !!(
+          newWin.document.querySelector('span[data-testid="expandable-text-box"]') ||
+          newWin.document.querySelector('div.jobs-description__content') ||
+          newWin.document.querySelector('div.jobs-description-content')
+        );
+
+        debugLog('log', `Poll ${elapsed}ms: winReady=${winReady} fnReady=${fnReady} contentReady=${contentReady}`);
+
+        if (winReady && fnReady && contentReady) {
+          clearInterval(poll);
+          debugLog('log', 'New window ready — selecting job description text');
+          newWin.LinkedInJobQuickSelect.selectAboutTheJobSection();
+        }
+      } catch (err) {
+        // Cross-origin error or window closed unexpectedly
+        clearInterval(poll);
+        debugLog('warn', 'Lost access to new window', err);
+      }
+    }, pollInterval);
+  } catch (error) {
+    debugLog('error', 'Error in openAndSelectInNewWindow', error);
+  }
+}
+
+function openJobTitleLink() {
+  try {
+    // Primary: any <a> linking directly to a /jobs/view/ URL (matches actual LinkedIn structure)
+    let titleLink = document.querySelector('a[href*="/jobs/view/"]');
+
+    if (!titleLink) {
+      // Fallbacks for older/alternate LinkedIn layouts
+      const selectors = [
+        '.jobs-unified-top-card__job-title a',
+        '.job-details-jobs-unified-top-card__job-title a',
+        'a[data-tracking-control-name="public_jobs_topcard-title"]',
+      ];
+      for (const selector of selectors) {
+        titleLink = document.querySelector(selector);
+        if (titleLink) break;
+      }
+    }
+
+    if (!titleLink || !titleLink.href) {
+      debugLog('warn', 'Could not find job title link');
+      return;
+    }
+
+    debugLog('log', 'Opening job title link', titleLink.href);
+    const features = currentOpenTarget === 'window' ? 'noopener,width=1200,height=900' : '';
+    window.open(titleLink.href, '_blank', features);
+  } catch (error) {
+    debugLog('error', 'Error opening job title link', error);
+  }
+}
 
 function selectAboutTheJobSection() {
   try {
@@ -401,3 +563,6 @@ function selectAboutTheJobSection() {
     debugLog('error', 'Error selecting text', error);
   }
 }
+
+// Expose selectAboutTheJobSection so opener windows can call it cross-window
+window.LinkedInJobQuickSelect.selectAboutTheJobSection = selectAboutTheJobSection;

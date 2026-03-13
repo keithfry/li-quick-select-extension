@@ -15,7 +15,7 @@
 
     <main>
       <section class="shortcut-section">
-        <label for="shortcut-display">Keyboard Shortcut</label>
+        <label for="shortcut-display">Select Job Description (About the Job)</label>
         <div class="shortcut-input-container">
           <input
             type="text"
@@ -30,6 +30,54 @@
           </button>
         </div>
         <p class="hint" id="hint-text">Click the field above and press your desired key combination</p>
+      </section>
+
+      <section class="shortcut-section">
+        <div class="open-target-row">
+          <label for="title-shortcut-display">Open Job Title Link in New</label>
+          <div class="open-target-radios">
+            <label class="radio-label">
+              <input type="radio" name="open-target" id="open-target-window" value="window" checked>
+              Window
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="open-target" id="open-target-tab" value="tab">
+              Tab
+            </label>
+          </div>
+        </div>
+        <div class="shortcut-input-container">
+          <input
+            type="text"
+            id="title-shortcut-display"
+            class="shortcut-display"
+            readonly
+            placeholder="Click to record shortcut"
+            tabindex="0"
+          >
+          <button id="title-clear-btn" class="clear-btn" title="Reset to default" aria-label="Reset to default shortcut">
+            ×
+          </button>
+        </div>
+        <p class="hint" id="title-hint-text">Click the field above and press your desired key combination</p>
+      </section>
+
+      <section class="shortcut-section">
+        <label id="combined-label" for="combined-shortcut-display">Open Job Title in New Window &amp; Select Description</label>
+        <div class="shortcut-input-container">
+          <input
+            type="text"
+            id="combined-shortcut-display"
+            class="shortcut-display"
+            readonly
+            placeholder="Click to record shortcut"
+            tabindex="0"
+          >
+          <button id="combined-clear-btn" class="clear-btn" title="Reset to default" aria-label="Reset to default shortcut">
+            ×
+          </button>
+        </div>
+        <p class="hint" id="combined-hint-text">Click the field above and press your desired key combination</p>
       </section>
 
       <section class="info-section">

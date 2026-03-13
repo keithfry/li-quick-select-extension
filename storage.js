@@ -36,6 +36,24 @@ const DEFAULT_SHORTCUT = {
   metaKey: false
 };
 
+const DEFAULT_TITLE_SHORTCUT = {
+  key: 'T',
+  code: 'KeyT',
+  altKey: true,
+  ctrlKey: false,
+  shiftKey: true,
+  metaKey: false
+};
+
+const DEFAULT_COMBINED_SHORTCUT = {
+  key: 'O',
+  code: 'KeyO',
+  altKey: true,
+  ctrlKey: false,
+  shiftKey: true,
+  metaKey: false
+};
+
 debugLog('log', 'DEFAULT_SHORTCUT defined', DEFAULT_SHORTCUT);
 
 // Reserved browser shortcuts that should be blocked
@@ -81,6 +99,107 @@ async function getShortcut() {
 async function saveShortcut(shortcut) {
   return new Promise((resolve, reject) => {
     chrome.storage.local.set({ keyboardShortcut: shortcut }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ * Get the job title shortcut from storage
+ * @returns {Promise<Object>} The keyboard shortcut object
+ */
+async function getTitleShortcut() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['titleShortcut'], (result) => {
+      if (chrome.runtime.lastError) {
+        debugLog('warn', 'Error loading title shortcut, using default:', chrome.runtime.lastError);
+        resolve(DEFAULT_TITLE_SHORTCUT);
+      } else {
+        resolve(result.titleShortcut || DEFAULT_TITLE_SHORTCUT);
+      }
+    });
+  });
+}
+
+/**
+ * Save the job title shortcut to storage
+ * @param {Object} shortcut - The keyboard shortcut object
+ * @returns {Promise<void>}
+ */
+async function saveTitleShortcut(shortcut) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({ titleShortcut: shortcut }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ * Get the combined (open + select) shortcut from storage
+ * @returns {Promise<Object>} The keyboard shortcut object
+ */
+async function getCombinedShortcut() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['combinedShortcut'], (result) => {
+      if (chrome.runtime.lastError) {
+        debugLog('warn', 'Error loading combined shortcut, using default:', chrome.runtime.lastError);
+        resolve(DEFAULT_COMBINED_SHORTCUT);
+      } else {
+        resolve(result.combinedShortcut || DEFAULT_COMBINED_SHORTCUT);
+      }
+    });
+  });
+}
+
+/**
+ * Save the combined (open + select) shortcut to storage
+ * @param {Object} shortcut - The keyboard shortcut object
+ * @returns {Promise<void>}
+ */
+async function saveCombinedShortcut(shortcut) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({ combinedShortcut: shortcut }, () => {
+      if (chrome.runtime.lastError) {
+        reject(chrome.runtime.lastError);
+      } else {
+        resolve();
+      }
+    });
+  });
+}
+
+/**
+ * Get the open-target preference ('window' or 'tab') from storage
+ * @returns {Promise<string>}
+ */
+async function getOpenTarget() {
+  return new Promise((resolve) => {
+    chrome.storage.local.get(['openTarget'], (result) => {
+      if (chrome.runtime.lastError) {
+        resolve('window');
+      } else {
+        resolve(result.openTarget || 'window');
+      }
+    });
+  });
+}
+
+/**
+ * Save the open-target preference to storage
+ * @param {'window'|'tab'} target
+ * @returns {Promise<void>}
+ */
+async function saveOpenTarget(target) {
+  return new Promise((resolve, reject) => {
+    chrome.storage.local.set({ openTarget: target }, () => {
       if (chrome.runtime.lastError) {
         reject(chrome.runtime.lastError);
       } else {
