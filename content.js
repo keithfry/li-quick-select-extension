@@ -430,7 +430,21 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 
 function openAndSelectInNewWindow() {
   try {
-    const titleLink = document.querySelector('a[href*="/jobs/view/"]');
+    const selectors = [
+      '.job-details-jobs-unified-top-card__job-title h1 a[href*="/jobs/view/"]',
+      '.jobs-unified-top-card__job-title h1 a[href*="/jobs/view/"]',
+      '.job-details-jobs-unified-top-card__job-title a[href*="/jobs/view/"]',
+      '.jobs-unified-top-card__job-title a[href*="/jobs/view/"]',
+      'a[data-tracking-control-name="public_jobs_topcard-title"]',
+    ];
+    let titleLink = null;
+    for (const selector of selectors) {
+      titleLink = document.querySelector(selector);
+      if (titleLink) break;
+    }
+    if (!titleLink) {
+      titleLink = document.querySelector('a[href*="/jobs/view/"]');
+    }
     if (!titleLink || !titleLink.href) {
       debugLog('warn', 'Could not find job title link for open-and-select');
       return;
@@ -449,20 +463,23 @@ function openAndSelectInNewWindow() {
 
 function openJobTitleLink() {
   try {
-    // Primary: any <a> linking directly to a /jobs/view/ URL (matches actual LinkedIn structure)
-    let titleLink = document.querySelector('a[href*="/jobs/view/"]');
+    // Primary: job title container with an <h1><a href> inside it
+    const selectors = [
+      '.job-details-jobs-unified-top-card__job-title h1 a[href*="/jobs/view/"]',
+      '.jobs-unified-top-card__job-title h1 a[href*="/jobs/view/"]',
+      '.job-details-jobs-unified-top-card__job-title a[href*="/jobs/view/"]',
+      '.jobs-unified-top-card__job-title a[href*="/jobs/view/"]',
+      'a[data-tracking-control-name="public_jobs_topcard-title"]',
+    ];
+    let titleLink = null;
+    for (const selector of selectors) {
+      titleLink = document.querySelector(selector);
+      if (titleLink) break;
+    }
 
+    // Last resort: first /jobs/view/ link (may pick wrong job on search pages)
     if (!titleLink) {
-      // Fallbacks for older/alternate LinkedIn layouts
-      const selectors = [
-        '.jobs-unified-top-card__job-title a',
-        '.job-details-jobs-unified-top-card__job-title a',
-        'a[data-tracking-control-name="public_jobs_topcard-title"]',
-      ];
-      for (const selector of selectors) {
-        titleLink = document.querySelector(selector);
-        if (titleLink) break;
-      }
+      titleLink = document.querySelector('a[href*="/jobs/view/"]');
     }
 
     if (!titleLink || !titleLink.href) {
