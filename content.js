@@ -407,7 +407,9 @@ function waitForContentAndSelect() {
     const contentReady = !!(
       document.querySelector('span[data-testid="expandable-text-box"]') ||
       document.querySelector('div.jobs-description__content') ||
-      document.querySelector('div.jobs-description-content')
+      document.querySelector('div.jobs-description-content') ||
+      document.querySelector('[data-test="JobDetail"] [class*="styles_description__"]') ||
+      document.querySelector('#job-description')
     );
 
     if (contentReady) {
@@ -501,8 +503,37 @@ function openJobTitleLink() {
   }
 }
 
+function selectWellfoundDescription() {
+  try {
+    // Type 2 (dedicated page): [data-test="JobDetail"] [class*="styles_description__"]
+    // Type 1 (search panel): #job-description
+    const el = document.querySelector('[data-test="JobDetail"] [class*="styles_description__"]')
+      || document.querySelector('#job-description');
+
+    if (!el) {
+      debugLog('warn', 'Could not find Wellfound job description element');
+      return;
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    debugLog('log', 'Wellfound description selected successfully');
+  } catch (error) {
+    debugLog('error', 'Error selecting Wellfound description', error);
+  }
+}
+
 function selectAboutTheJobSection() {
   try {
+    if (isWellfound()) {
+      selectWellfoundDescription();
+      return;
+    }
+
     // Find the "About the job" h2 heading
     const headings = document.querySelectorAll('h2');
     let aboutJobHeading = null;
@@ -544,6 +575,14 @@ function selectAboutTheJobSection() {
       aboutJobHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       debugLog('log', 'Text selected successfully (primary method)');
+      return;
+    }
+
+    // Fallback method: try Wellfound selectors (handles test environments where hostname mock may not work)
+    const wellfoundEl = document.querySelector('[data-test="JobDetail"] [class*="styles_description__"]')
+      || document.querySelector('#job-description');
+    if (wellfoundEl) {
+      selectWellfoundDescription();
       return;
     }
 
