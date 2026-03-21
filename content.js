@@ -11,8 +11,20 @@ debugLog('log', 'Content script loaded!', {
 // Check if we're on a job page
 function isJobPage() {
   const url = window.location.href;
-  // Match /jobs, /jobs/, /jobs?, /jobs#, etc.
+  if (url.includes('wellfound.com')) {
+    return url.includes('/jobs');
+  }
   return url.includes('/jobs/') || url.includes('/jobs?') || url.includes('/jobs#') || url.match(/\/jobs$/);
+}
+
+// Check if we're on Wellfound
+function isWellfound() {
+  return window.location.hostname.includes('wellfound.com');
+}
+
+// Check if we're on a Wellfound dedicated job page (e.g. /jobs/3991112-slug)
+function isWellfoundDedicatedPage() {
+  return isWellfound() && /\/jobs\/\d+/.test(window.location.pathname);
 }
 
 // Log page type
@@ -430,69 +442,60 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
 
 function openAndSelectInNewWindow() {
   try {
-    const selectors = [
-      '.job-details-jobs-unified-top-card__job-title h1 a[href*="/jobs/view/"]',
-      '.jobs-unified-top-card__job-title h1 a[href*="/jobs/view/"]',
-      '.job-details-jobs-unified-top-card__job-title a[href*="/jobs/view/"]',
-      '.jobs-unified-top-card__job-title a[href*="/jobs/view/"]',
-      'a[data-tracking-control-name="public_jobs_topcard-title"]',
-    ];
-    let titleLink = null;
-    for (const selector of selectors) {
-      titleLink = document.querySelector(selector);
-      if (titleLink) break;
-    }
-    if (!titleLink) {
-      titleLink = document.querySelector('a[href*="/jobs/view/"]');
-    }
-    if (!titleLink || !titleLink.href) {
-      debugLog('warn', 'Could not find job title link for open-and-select');
+    const url = findJobTitleUrl();
+    if (!url) {
+      debugLog('warn', 'Could not find job title URL for open-and-select');
       return;
     }
-
-    debugLog('log', 'Requesting background to open and select', titleLink.href);
-    chrome.runtime.sendMessage({
-      action: 'openWindowAndSelect',
-      url: titleLink.href,
-      target: currentOpenTarget
-    });
+    debugLog('log', 'Requesting background to open and select', url);
+    chrome.runtime.sendMessage({ action: 'openWindowAndSelect', url, target: currentOpenTarget });
   } catch (error) {
     debugLog('error', 'Error in openAndSelectInNewWindow', error);
   }
 }
 
+// Returns the URL to open for the job title link (site-agnostic)
+function findJobTitleUrl() {
+  if (isWellfound()) {
+    // Dedicated page: already on the job page
+    if (isWellfoundDedicatedPage()) {
+      return window.location.href;
+    }
+    // Search panel: construct URL from job_listing_slug query param
+    const params = new URLSearchParams(window.location.search);
+    const slug = params.get('job_listing_slug');
+    if (slug) {
+      return `https://wellfound.com/jobs/${slug}`;
+    }
+    debugLog('warn', 'Could not determine Wellfound job URL from query params');
+    return null;
+  }
+
+  // LinkedIn selectors
+  const selectors = [
+    '.job-details-jobs-unified-top-card__job-title h1 a[href*="/jobs/view/"]',
+    '.jobs-unified-top-card__job-title h1 a[href*="/jobs/view/"]',
+    '.job-details-jobs-unified-top-card__job-title a[href*="/jobs/view/"]',
+    '.jobs-unified-top-card__job-title a[href*="/jobs/view/"]',
+    'a[data-tracking-control-name="public_jobs_topcard-title"]',
+  ];
+  for (const selector of selectors) {
+    const link = document.querySelector(selector);
+    if (link?.href) return link.href;
+  }
+  const fallback = document.querySelector('a[href*="/jobs/view/"]');
+  return fallback?.href || null;
+}
+
 function openJobTitleLink() {
   try {
-    // Primary: job title container with an <h1><a href> inside it
-    const selectors = [
-      '.job-details-jobs-unified-top-card__job-title h1 a[href*="/jobs/view/"]',
-      '.jobs-unified-top-card__job-title h1 a[href*="/jobs/view/"]',
-      '.job-details-jobs-unified-top-card__job-title a[href*="/jobs/view/"]',
-      '.jobs-unified-top-card__job-title a[href*="/jobs/view/"]',
-      'a[data-tracking-control-name="public_jobs_topcard-title"]',
-    ];
-    let titleLink = null;
-    for (const selector of selectors) {
-      titleLink = document.querySelector(selector);
-      if (titleLink) break;
-    }
-
-    // Last resort: first /jobs/view/ link (may pick wrong job on search pages)
-    if (!titleLink) {
-      titleLink = document.querySelector('a[href*="/jobs/view/"]');
-    }
-
-    if (!titleLink || !titleLink.href) {
-      debugLog('warn', 'Could not find job title link');
+    const url = findJobTitleUrl();
+    if (!url) {
+      debugLog('warn', 'Could not find job title URL');
       return;
     }
-
-    debugLog('log', 'Requesting background to open title link', titleLink.href);
-    chrome.runtime.sendMessage({
-      action: 'openWindow',
-      url: titleLink.href,
-      target: currentOpenTarget
-    });
+    debugLog('log', 'Requesting background to open title link', url);
+    chrome.runtime.sendMessage({ action: 'openWindow', url, target: currentOpenTarget });
   } catch (error) {
     debugLog('error', 'Error opening job title link', error);
   }
