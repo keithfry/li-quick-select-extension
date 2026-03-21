@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Mock Wellfound Search Panel</title>
+</head>
+<body>
+  <!-- Mimics the embedded panel on wellfound.com/jobs?job_listing_slug=XXXX-slug — Type 1 view -->
+  <div class="mt-6 rounded-xl border border-gray-400 px-6 py-6">
+    <h2 class="mb-2 text-2xl font-semibold">About the job</h2>
+    <div class="relative">
+      <div class="styles_description__xjvTf inline-block text-black" id="job-description">
+        <h3><strong>Engineering Manager - Data &amp; AI</strong></h3>
+        <p>About the role: lead our Data/AI team.</p>
+        <ul>
+          <li>Manage a team of engineers</li>
+          <li>Drive technical direction</li>
+        </ul>
+        <p>Requirements: 6+ years experience.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input elements for testing "ignore when typing" behavior -->
+  <input type="text" id="search-input" placeholder="Type here..." />
+  <textarea id="message-textarea" rows="4"></textarea>
+  <div class="contenteditable-div" contenteditable="true">Editable</div>
+</body>
+</html>
