@@ -389,6 +389,34 @@ chrome.runtime.onMessage.addListener((message) => {
   }
 });
 
+// Wait for DOM mutations on a target element to stop for stableMs, then call onStable.
+// Falls back after maxWaitMs regardless.
+function waitForDomStable(target, onStable, stableMs = 800, maxWaitMs = 6000) {
+  let timer;
+
+  const settle = () => {
+    observer.disconnect();
+    clearTimeout(fallback);
+    onStable();
+  };
+
+  const observer = new MutationObserver(() => {
+    clearTimeout(timer);
+    timer = setTimeout(settle, stableMs);
+  });
+
+  observer.observe(target, { childList: true, subtree: true, characterData: true });
+
+  // Fire immediately if no mutations occur within stableMs
+  timer = setTimeout(settle, stableMs);
+
+  // Hard upper bound
+  const fallback = setTimeout(() => {
+    clearTimeout(timer);
+    settle();
+  }, maxWaitMs);
+}
+
 // Poll for job description content then select it (used after background opens a new tab/window)
 function waitForContentAndSelect() {
   const maxWait = 20000;
@@ -414,8 +442,11 @@ function waitForContentAndSelect() {
 
     if (contentReady) {
       clearInterval(poll);
-      debugLog('log', 'Content ready — waiting for extensions to initialize before selecting');
-      setTimeout(() => selectAboutTheJobSection(), 1500);
+      debugLog('log', 'Content ready — waiting for DOM to stabilize before selecting');
+      waitForDomStable(document.body, () => {
+        debugLog('log', 'DOM stable — selecting job description');
+        selectAboutTheJobSection();
+      });
     }
   }, pollInterval);
 }
