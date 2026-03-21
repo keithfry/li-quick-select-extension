@@ -414,8 +414,8 @@ function waitForContentAndSelect() {
 
     if (contentReady) {
       clearInterval(poll);
-      debugLog('log', 'Content ready — selecting job description');
-      selectAboutTheJobSection();
+      debugLog('log', 'Content ready — waiting for extensions to initialize before selecting');
+      setTimeout(() => selectAboutTheJobSection(), 1500);
     }
   }, pollInterval);
 }
