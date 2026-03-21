@@ -13,13 +13,7 @@ async function loadFixture(browser, fixtureName, url) {
   const htmlPath = path.join(__dirname, `../fixtures/${fixtureName}`);
   const html = fs.readFileSync(htmlPath, 'utf-8');
 
-  await page.addInitScript((mockUrl) => {
-    // Mock window.location
-    Object.defineProperty(window, 'location', {
-      value: new URL(mockUrl),
-      writable: true
-    });
-
+  await page.addInitScript(() => {
     class ChromeStorageMock {
       get(keys, callback) {
         callback({
@@ -35,9 +29,15 @@ async function loadFixture(browser, fixtureName, url) {
       },
       runtime: { onMessage: { addListener: () => {} }, sendMessage: () => {} }
     };
-  }, url);
+  });
 
-  await page.setContent(html);
+  // Route the wellfound URL to serve our fixture HTML
+  await page.route(url, route => {
+    route.fulfill({ body: html, contentType: 'text/html' });
+  });
+
+  // Navigate to the actual URL so window.location.hostname is correct
+  await page.goto(url);
 
   await page.addScriptTag({ path: path.join(__dirname, '../../storage.js') });
   await page.addScriptTag({ path: path.join(__dirname, '../../content.js') });

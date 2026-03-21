@@ -8,15 +8,6 @@ debugLog('log', 'Content script loaded!', {
   timestamp: new Date().toISOString()
 });
 
-// Check if we're on a job page
-function isJobPage() {
-  const url = window.location.href;
-  if (url.includes('wellfound.com')) {
-    return url.includes('/jobs');
-  }
-  return url.includes('/jobs/') || url.includes('/jobs?') || url.includes('/jobs#') || url.match(/\/jobs$/);
-}
-
 // Check if we're on Wellfound
 function isWellfound() {
   return window.location.hostname.includes('wellfound.com');
@@ -24,7 +15,16 @@ function isWellfound() {
 
 // Check if we're on a Wellfound dedicated job page (e.g. /jobs/3991112-slug)
 function isWellfoundDedicatedPage() {
-  return isWellfound() && /\/jobs\/\d+/.test(window.location.pathname);
+  return isWellfound() && /^\/jobs\/\d+/.test(window.location.pathname);
+}
+
+// Check if we're on a job page
+function isJobPage() {
+  if (isWellfound()) {
+    return window.location.pathname.includes('/jobs');
+  }
+  const url = window.location.href;
+  return url.includes('/jobs/') || url.includes('/jobs?') || url.includes('/jobs#') || url.match(/\/jobs$/);
 }
 
 // Log page type
@@ -575,14 +575,6 @@ function selectAboutTheJobSection() {
       aboutJobHeading.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
       debugLog('log', 'Text selected successfully (primary method)');
-      return;
-    }
-
-    // Fallback method: try Wellfound selectors (handles test environments where hostname mock may not work)
-    const wellfoundEl = document.querySelector('[data-test="JobDetail"] [class*="styles_description__"]')
-      || document.querySelector('#job-description');
-    if (wellfoundEl) {
-      selectWellfoundDescription();
       return;
     }
 
