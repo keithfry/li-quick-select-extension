@@ -221,11 +221,13 @@ async function initialize() {
 
     debugLog('log', 'Dependencies verified, initializing...');
 
-    // Ensure body is focusable to receive keyboard events
+    // Ensure body is focusable and focused to receive keyboard events
     if (!document.body.hasAttribute('tabindex')) {
       document.body.setAttribute('tabindex', '-1');
       debugLog('log', 'Set body tabindex to -1 to enable keyboard event capture');
     }
+    document.body.focus();
+    debugLog('log', 'Focused document body to establish keyboard focus');
 
     await initializeShortcut();
     debugLog('log', 'Shortcut initialized, registering listener...');
