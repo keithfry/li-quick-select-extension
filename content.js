@@ -543,10 +543,43 @@ function selectWellfoundDescription() {
   }
 }
 
+function selectIndeedDescription() {
+  try {
+    const el = document.querySelector('#jobDescriptionText');
+
+    if (!el) {
+      debugLog('warn', 'Could not find Indeed job description element (#jobDescriptionText)');
+      return;
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    const heading = document.querySelector('#jobDescriptionTitleHeading');
+    if (heading) {
+      heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    } else {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    debugLog('log', 'Indeed description selected successfully');
+  } catch (error) {
+    debugLog('error', 'Error selecting Indeed description', error);
+  }
+}
+
 function selectAboutTheJobSection() {
   try {
     if (isWellfound()) {
       selectWellfoundDescription();
+      return;
+    }
+
+    if (isIndeed()) {
+      selectIndeedDescription();
       return;
     }
 
