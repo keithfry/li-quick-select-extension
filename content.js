@@ -378,6 +378,8 @@ window.LinkedInJobQuickSelect.forceReregister = function() {
   console.log('Listeners re-registered. Try your shortcut now.');
 };
 
+window.LinkedInJobQuickSelect.findJobTitleUrl = findJobTitleUrl;
+
 debugLog('log', 'Helper functions exposed: LinkedInJobQuickSelect.checkStatus() and LinkedInJobQuickSelect.forceReregister()');
 
 // Periodic health check
@@ -486,6 +488,19 @@ function findJobTitleUrl() {
       return `https://wellfound.com/jobs/${slug}`;
     }
     debugLog('warn', 'Could not determine Wellfound job URL from query params');
+    return null;
+  }
+
+  if (isIndeed()) {
+    if (isIndeedDedicatedPage()) {
+      return window.location.href;
+    }
+    const params = new URLSearchParams(window.location.search);
+    const vjk = params.get('vjk');
+    if (vjk) {
+      return `https://www.indeed.com/viewjob?jk=${vjk}`;
+    }
+    debugLog('warn', 'Could not find Indeed job key in URL params');
     return null;
   }
 
