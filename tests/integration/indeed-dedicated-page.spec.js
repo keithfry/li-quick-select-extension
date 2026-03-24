@@ -1,0 +1,90 @@
+import { test, expect } from '@playwright/test';
+import path from 'path';
+import { fileURLToPath } from 'url';
+import fs from 'fs';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+test.describe('Indeed Dedicated Job Page - DOM Selection', () => {
+  let page;
+
+  test.beforeEach(async ({ browser }) => {
+    page = await browser.newPage();
+
+    const htmlPath = path.join(__dirname, '../fixtures/indeed-job-dedicated-page.html');
+    const html = fs.readFileSync(htmlPath, 'utf-8');
+
+    await page.goto('about:blank');
+    await page.evaluate((html) => {
+      document.open();
+      document.write(html);
+      document.close();
+      window.history.replaceState({}, '', 'https://www.indeed.com/viewjob?jk=abc123test');
+    }, html);
+
+    await page.addInitScript(() => {
+      window.chrome = {
+        storage: {
+          local: {
+            get(keys, callback) {
+              callback({
+                keyboardShortcut: {
+                  key: 'S', code: 'KeyS',
+                  altKey: true, ctrlKey: false, shiftKey: true, metaKey: false
+                }
+              });
+            }
+          },
+          onChanged: { addListener: () => {} }
+        },
+        runtime: { onMessage: { addListener: () => {} }, sendMessage: () => {} }
+      };
+    });
+
+    await page.addScriptTag({ path: path.join(__dirname, '../../storage.js') });
+    await page.addScriptTag({ path: path.join(__dirname, '../../content.js') });
+    await page.waitForTimeout(500);
+  });
+
+  test.afterEach(async () => {
+    await page.close();
+  });
+
+  test('selects job description on keyboard shortcut', async () => {
+    await page.keyboard.down('Alt');
+    await page.keyboard.down('Shift');
+    await page.keyboard.press('S');
+    await page.keyboard.up('Shift');
+    await page.keyboard.up('Alt');
+
+    await page.waitForTimeout(100);
+
+    const selectedText = await page.evaluate(() => window.getSelection().toString());
+
+    expect(selectedText).toContain('About the Role');
+    expect(selectedText).toContain('Responsibilities');
+    expect(selectedText).toContain('Qualifications');
+  });
+
+  test('does not select "Explore other jobs" carousel', async () => {
+    await page.keyboard.down('Alt');
+    await page.keyboard.down('Shift');
+    await page.keyboard.press('S');
+    await page.keyboard.up('Shift');
+    await page.keyboard.up('Alt');
+
+    await page.waitForTimeout(100);
+
+    const selectedText = await page.evaluate(() => window.getSelection().toString());
+    expect(selectedText).not.toContain('Other jobs content that should NOT be selected');
+  });
+
+  test('findJobTitleUrl returns current URL on dedicated page', async () => {
+    const url = await page.evaluate(() => {
+      return window.LinkedInJobQuickSelect?.findJobTitleUrl?.() ?? null;
+    });
+
+    expect(url).toContain('/viewjob?jk=abc123test');
+  });
+});
