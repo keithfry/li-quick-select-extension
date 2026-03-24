@@ -427,7 +427,8 @@ function waitForContentAndSelect() {
       document.querySelector('div.jobs-description__content') ||
       document.querySelector('div.jobs-description-content') ||
       document.querySelector('[data-test="JobDetail"] [class*="styles_description__"]') ||
-      document.querySelector('#job-description')
+      document.querySelector('#job-description') ||
+      document.querySelector('#jobDescriptionText')
     );
 
     if (contentReady) {
