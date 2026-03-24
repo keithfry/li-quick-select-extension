@@ -18,10 +18,24 @@ function isWellfoundDedicatedPage() {
   return isWellfound() && /^\/jobs\/\d+/.test(window.location.pathname);
 }
 
+// Check if we're on Indeed
+function isIndeed() {
+  return window.location.hostname.includes('indeed.com');
+}
+
+// Check if we're on a dedicated Indeed job page (e.g. /viewjob?jk=...)
+function isIndeedDedicatedPage() {
+  return isIndeed() && window.location.pathname === '/viewjob';
+}
+
 // Check if we're on a job page
 function isJobPage() {
   if (isWellfound()) {
     return window.location.pathname.includes('/jobs');
+  }
+  if (isIndeed()) {
+    const params = new URLSearchParams(window.location.search);
+    return params.has('vjk') || window.location.pathname === '/viewjob';
   }
   const url = window.location.href;
   return url.includes('/jobs/') || url.includes('/jobs?') || url.includes('/jobs#') || url.match(/\/jobs$/);
