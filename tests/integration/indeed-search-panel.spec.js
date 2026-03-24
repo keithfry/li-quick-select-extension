@@ -15,14 +15,12 @@ test.describe('Indeed Search Panel - DOM Selection', () => {
     const htmlPath = path.join(__dirname, '../fixtures/indeed-job-search-panel.html');
     const html = fs.readFileSync(htmlPath, 'utf-8');
 
-    await page.goto('about:blank');
-    await page.evaluate((html) => {
-      document.open();
-      document.write(html);
-      document.close();
-      window.history.replaceState({}, '', 'https://www.indeed.com/?vjk=abc123test');
-    }, html);
+    // Intercept the Indeed URL and serve our fixture HTML
+    await page.route('https://www.indeed.com/**', route => {
+      route.fulfill({ body: html, contentType: 'text/html' });
+    });
 
+    // Inject chrome mock before navigation
     await page.addInitScript(() => {
       window.chrome = {
         storage: {
@@ -41,6 +39,9 @@ test.describe('Indeed Search Panel - DOM Selection', () => {
         runtime: { onMessage: { addListener: () => {} }, sendMessage: () => {} }
       };
     });
+
+    // Navigate to the real Indeed search panel URL — fixture HTML will be served
+    await page.goto('https://www.indeed.com/?vjk=abc123test');
 
     await page.addScriptTag({ path: path.join(__dirname, '../../storage.js') });
     await page.addScriptTag({ path: path.join(__dirname, '../../content.js') });
