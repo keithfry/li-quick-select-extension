@@ -20,7 +20,8 @@ function isWellfoundDedicatedPage() {
 
 // Check if we're on Indeed
 function isIndeed() {
-  return window.location.hostname.includes('indeed.com');
+  return window.location.hostname === 'indeed.com' ||
+         window.location.hostname.endsWith('.indeed.com');
 }
 
 // Check if we're on a dedicated Indeed job page (e.g. /viewjob?jk=...)
@@ -378,8 +379,6 @@ window.LinkedInJobQuickSelect.forceReregister = function() {
   console.log('Listeners re-registered. Try your shortcut now.');
 };
 
-window.LinkedInJobQuickSelect.findJobTitleUrl = findJobTitleUrl;
-
 debugLog('log', 'Helper functions exposed: LinkedInJobQuickSelect.checkStatus() and LinkedInJobQuickSelect.forceReregister()');
 
 // Periodic health check
@@ -499,7 +498,7 @@ function findJobTitleUrl() {
     const params = new URLSearchParams(window.location.search);
     const vjk = params.get('vjk');
     if (vjk) {
-      return `https://www.indeed.com/viewjob?jk=${vjk}`;
+      return `https://${window.location.hostname}/viewjob?jk=${vjk}`;
     }
     debugLog('warn', 'Could not find Indeed job key in URL params');
     return null;
@@ -520,6 +519,8 @@ function findJobTitleUrl() {
   const fallback = document.querySelector('a[href*="/jobs/view/"]');
   return fallback?.href || null;
 }
+
+window.LinkedInJobQuickSelect.findJobTitleUrl = findJobTitleUrl;
 
 function openJobTitleLink() {
   try {
