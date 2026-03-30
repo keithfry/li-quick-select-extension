@@ -14,7 +14,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.linkedin.com/*", "*://*.wellfound.com/*", "*://*.indeed.com/*"],
+      "matches": ["*://*.linkedin.com/*", "*://*.wellfound.com/*", "*://*.indeed.com/*", "*://*.glassdoor.com/*"],
       "js": ["storage.js", "content.js"],
       "run_at": "document_idle"
     }

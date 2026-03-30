@@ -29,6 +29,16 @@ function isIndeedDedicatedPage() {
   return isIndeed() && window.location.pathname === '/viewjob';
 }
 
+// Check if we're on Glassdoor
+function isGlassdoor() {
+  return window.location.hostname.includes('glassdoor.com');
+}
+
+// Check if we're on a dedicated Glassdoor job page (e.g. /job-listing/...)
+function isGlassdoorDedicatedPage() {
+  return isGlassdoor() && window.location.pathname.includes('/job-listing/');
+}
+
 // Check if we're on a job page
 function isJobPage() {
   if (isWellfound()) {
@@ -37,6 +47,10 @@ function isJobPage() {
   if (isIndeed()) {
     const params = new URLSearchParams(window.location.search);
     return params.has('vjk') || window.location.pathname === '/viewjob';
+  }
+  if (isGlassdoor()) {
+    return window.location.pathname.includes('/Job/') ||
+           window.location.pathname.includes('/job-listing/');
   }
   const url = window.location.href;
   return url.includes('/jobs/') || url.includes('/jobs?') || url.includes('/jobs#') || url.match(/\/jobs$/);
@@ -427,7 +441,8 @@ function waitForContentAndSelect() {
       document.querySelector('div.jobs-description-content') ||
       document.querySelector('[data-test="JobDetail"] [class*="styles_description__"]') ||
       document.querySelector('#job-description') ||
-      document.querySelector('#jobDescriptionText')
+      document.querySelector('#jobDescriptionText') ||
+      document.querySelector('[class*="JobDetails_jobDescription"]')
     );
 
     if (contentReady) {
@@ -504,6 +519,16 @@ function findJobTitleUrl() {
     return null;
   }
 
+  if (isGlassdoor()) {
+    if (isGlassdoorDedicatedPage()) {
+      return window.location.href;
+    }
+    const link = document.querySelector('a[href*="/job-listing/"]');
+    if (link?.href) return link.href;
+    debugLog('warn', 'Could not find Glassdoor job listing link');
+    return null;
+  }
+
   // LinkedIn selectors
   const selectors = [
     '.job-details-jobs-unified-top-card__job-title h1 a[href*="/jobs/view/"]',
@@ -560,6 +585,25 @@ function selectWellfoundDescription() {
   }
 }
 
+function selectGlassdoorDescription() {
+  try {
+    const el = document.querySelector('[class*="JobDetails_jobDescription"]');
+    if (!el) {
+      debugLog('warn', 'Could not find Glassdoor job description element');
+      return;
+    }
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    debugLog('log', 'Glassdoor description selected successfully');
+  } catch (error) {
+    debugLog('error', 'Error selecting Glassdoor description', error);
+  }
+}
+
 function selectIndeedDescription() {
   try {
     const el = document.querySelector('#jobDescriptionText');
@@ -597,6 +641,11 @@ function selectAboutTheJobSection() {
 
     if (isIndeed()) {
       selectIndeedDescription();
+      return;
+    }
+
+    if (isGlassdoor()) {
+      selectGlassdoorDescription();
       return;
     }
 
