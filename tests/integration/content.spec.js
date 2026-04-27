@@ -47,6 +47,7 @@ test.describe('Content Script - DOM Selection', () => {
         },
         runtime: {}
       };
+
     });
 
     // Load storage.js
@@ -239,6 +240,11 @@ test.describe('Content Script - DOM Selection', () => {
   });
 
   test('logs appropriate console messages', async () => {
+    // Enable debug logging (off by default; addInitScript doesn't apply after setContent)
+    await page.evaluate(() => {
+      window.LinkedInJobQuickSelect.debugEnabled = true;
+    });
+
     const consoleMessages = [];
 
     page.on('console', msg => {

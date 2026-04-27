@@ -13,11 +13,11 @@ test.describe('Storage Utilities', () => {
   test.beforeEach(async ({ browser }) => {
     page = await browser.newPage();
 
-    // Navigate to a blank page first
-    await page.goto('about:blank');
-
-    // Inject Chrome API mocks
+    // Inject Chrome API mocks BEFORE navigation so addInitScript runs on page load
     await injectChromeMocks(page);
+
+    // Navigate to a blank page
+    await page.goto('about:blank');
 
     // Load storage.js content
     const storageJs = fs.readFileSync(path.join(__dirname, '../../storage.js'), 'utf-8');

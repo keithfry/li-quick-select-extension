@@ -233,6 +233,9 @@ test.describe('Options Page - Standalone', () => {
       document.getElementById('shortcut-display').dispatchEvent(event);
     });
 
+    // Wait for async saveShortcut to resolve and update the display
+    await page.waitForTimeout(200);
+
     // Should extract 'S' from code and display correctly
     const value = await shortcutDisplay.inputValue();
     expect(value).toContain('S');
