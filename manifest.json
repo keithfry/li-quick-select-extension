@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "LinkedIn Job Quick Select",
-  "version": "1.4",
+  "version": "1.5",
   "description": "Quickly select 'About the job' section on LinkedIn with a customizable keyboard shortcut",
   "permissions": ["storage", "windows", "tabs"],
   "background": {
@@ -14,7 +14,7 @@
   },
   "content_scripts": [
     {
-      "matches": ["*://*.linkedin.com/*", "*://*.wellfound.com/*", "*://*.indeed.com/*", "*://*.glassdoor.com/*"],
+      "matches": ["*://*.linkedin.com/*", "*://*.wellfound.com/*", "*://*.indeed.com/*", "*://*.glassdoor.com/*", "*://*.welcometothejungle.com/*"],
       "js": ["storage.js", "content.js"],
       "run_at": "document_idle"
     }

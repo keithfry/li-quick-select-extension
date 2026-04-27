@@ -39,6 +39,16 @@ function isGlassdoorDedicatedPage() {
   return isGlassdoor() && window.location.pathname.includes('/job-listing/');
 }
 
+// Check if we're on Welcome to the Jungle
+function isWelcomeToTheJungle() {
+  return window.location.hostname.includes('welcometothejungle.com');
+}
+
+// Check if we're on a dedicated Welcome to the Jungle job page (e.g. /jobs/zMfP9vbb)
+function isWelcomeToTheJungleDedicatedPage() {
+  return isWelcomeToTheJungle() && /^\/jobs\//.test(window.location.pathname);
+}
+
 // Check if we're on a job page
 function isJobPage() {
   if (isWellfound()) {
@@ -51,6 +61,9 @@ function isJobPage() {
   if (isGlassdoor()) {
     return window.location.pathname.includes('/Job/') ||
            window.location.pathname.includes('/job-listing/');
+  }
+  if (isWelcomeToTheJungle()) {
+    return /^\/jobs\//.test(window.location.pathname);
   }
   const url = window.location.href;
   return url.includes('/jobs/') || url.includes('/jobs?') || url.includes('/jobs#') || url.match(/\/jobs$/);
@@ -442,7 +455,8 @@ function waitForContentAndSelect() {
       document.querySelector('[data-test="JobDetail"] [class*="styles_description__"]') ||
       document.querySelector('#job-description') ||
       document.querySelector('#jobDescriptionText') ||
-      document.querySelector('[class*="JobDetails_jobDescription"]')
+      document.querySelector('[class*="JobDetails_jobDescription"]') ||
+      document.querySelector('[data-testid="job-card-v2"]')
     );
 
     if (contentReady) {
@@ -526,6 +540,12 @@ function findJobTitleUrl() {
     const link = document.querySelector('a[href*="/job-listing/"]');
     if (link?.href) return link.href;
     debugLog('warn', 'Could not find Glassdoor job listing link');
+    return null;
+  }
+
+  if (isWelcomeToTheJungle()) {
+    if (isWelcomeToTheJungleDedicatedPage()) return window.location.href;
+    debugLog('warn', 'Could not determine Welcome to the Jungle job URL');
     return null;
   }
 
@@ -632,8 +652,34 @@ function selectIndeedDescription() {
   }
 }
 
+function selectWelcomeToTheJungleDescription() {
+  try {
+    const el = document.querySelector('[data-testid="job-card-v2"]');
+
+    if (!el) {
+      debugLog('warn', 'Could not find Welcome to the Jungle job description element');
+      return;
+    }
+
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const selection = window.getSelection();
+    selection.removeAllRanges();
+    selection.addRange(range);
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    debugLog('log', 'Welcome to the Jungle description selected successfully');
+  } catch (error) {
+    debugLog('error', 'Error selecting Welcome to the Jungle description', error);
+  }
+}
+
 function selectAboutTheJobSection() {
   try {
+    if (isWelcomeToTheJungle()) {
+      selectWelcomeToTheJungleDescription();
+      return;
+    }
+
     if (isWellfound()) {
       selectWellfoundDescription();
       return;
