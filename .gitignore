@@ -20,3 +20,6 @@ yarn.lock
 # Playwright test artifacts
 playwright-report/
 test-results/
+
+# Generated store screenshots (run `npm run screenshots` to regenerate)
+store-assets/screenshots/
