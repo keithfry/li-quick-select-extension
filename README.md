@@ -1,12 +1,20 @@
-# LinkedIn Job Quick Select
+# JD Grab
 
-A Chrome extension that allows you to quickly select the "About the job" section on LinkedIn job postings using a customizable keyboard shortcut.
+A Chrome extension that allows you to quickly select job description text on LinkedIn, Indeed, Glassdoor, Wellfound, and Welcome to the Jungle job postings using a customizable keyboard shortcut.
+
+## Supported Sites
+
+- LinkedIn
+- Indeed
+- Glassdoor
+- Wellfound
+- Welcome to the Jungle
 
 ## Features
 
 - **Customizable Keyboard Shortcuts**: Configure any keyboard combination that suits your workflow
 - **Smart Text Selection**: Automatically finds and selects the job description content
-- **SPA Navigation Support**: Works seamlessly as you navigate between jobs on LinkedIn
+- **SPA Navigation Support**: Works seamlessly as you navigate between jobs
 - **Fallback Selection Methods**: Multiple strategies to ensure reliable text selection
 
 ## Installation
@@ -15,7 +23,7 @@ A Chrome extension that allows you to quickly select the "About the job" section
 2. Open Chrome and navigate to `chrome://extensions/`
 3. Enable "Developer mode" in the top right corner
 4. Click "Load unpacked" and select the extension directory
-5. Navigate to any LinkedIn job posting to use the extension
+5. Navigate to any supported job posting to use the extension
 
 ## Default Keyboard Shortcut
 
@@ -37,7 +45,7 @@ A Chrome extension that allows you to quickly select the "About the job" section
 
 ## Usage
 
-1. Navigate to any LinkedIn job posting
+1. Navigate to any supported job posting
 2. Press your configured keyboard shortcut
 3. The "About the job" section will be selected and scrolled into view
 4. You can now copy the text with Ctrl+C (or Cmd+C on Mac)
@@ -60,10 +68,10 @@ Debug logging is **disabled by default**. To control it:
 
 ```javascript
 // Enable all debug logging
-window.LinkedInJobQuickSelect.debugEnabled = true
+window.JDGrab.debugEnabled = true
 
 // Disable all debug logging
-window.LinkedInJobQuickSelect.debugEnabled = false
+window.JDGrab.debugEnabled = false
 ```
 
 #### Permanent Configuration
@@ -74,17 +82,17 @@ To permanently enable debug logging, edit the files:
 
 Change:
 ```javascript
-window.LinkedInJobQuickSelect.debugEnabled = false;
+window.JDGrab.debugEnabled = false;
 ```
 
 To:
 ```javascript
-window.LinkedInJobQuickSelect.debugEnabled = true;
+window.JDGrab.debugEnabled = true;
 ```
 
 ### Understanding Debug Logs
 
-All debug logs are prefixed with `LinkedIn Job Quick Select:` to make them easy to filter.
+All debug logs are prefixed with `JD Grab:` to make them easy to filter.
 
 #### Common Log Messages
 
@@ -111,7 +119,7 @@ All debug logs are prefixed with `LinkedIn Job Quick Select:` to make them easy 
 
 To see only extension logs, use the Console filter:
 ```
-LinkedIn Job Quick Select
+JD Grab
 ```
 
 ### Console Helper Functions
@@ -121,7 +129,7 @@ The extension exposes helper functions for debugging:
 #### Check Extension Status
 
 ```javascript
-LinkedInJobQuickSelect.checkStatus()
+JDGrab.checkStatus()
 ```
 
 This displays:
@@ -136,7 +144,7 @@ This displays:
 If the shortcut stops working after navigation:
 
 ```javascript
-LinkedInJobQuickSelect.forceReregister()
+JDGrab.forceReregister()
 ```
 
 This manually re-registers the keyboard listeners.
@@ -144,10 +152,10 @@ This manually re-registers the keyboard listeners.
 ## File Structure
 
 ```
-li-quick-select-extension/
+jd-grab/
 ├── manifest.json          # Extension configuration
 ├── storage.js            # Keyboard shortcut storage utilities
-├── content.js            # Main content script (runs on LinkedIn pages)
+├── content.js            # Main content script (runs on supported job sites)
 ├── options.js            # Options page logic
 ├── options.html          # Options page UI
 ├── popup.html            # Extension popup UI
@@ -187,7 +195,7 @@ If it still doesn't work:
 
 1. **Click anywhere on the page** - This gives focus and enables keyboard events
 2. **Reload the LinkedIn page** - Sometimes initial load fails
-3. **Use the console helper**: Run `LinkedInJobQuickSelect.forceReregister()` to manually re-register
+3. **Use the console helper**: Run `JDGrab.forceReregister()` to manually re-register
 4. **Check for conflicting extensions** - Disable other keyboard shortcut extensions temporarily
 5. **Try a different shortcut** - Some shortcuts may be captured by other software
 
@@ -220,12 +228,12 @@ debugLog('warn', 'Warning message');
 debugLog('error', 'Error message', errorObject);
 ```
 
-All logging will respect the `window.LinkedInJobQuickSelect.debugEnabled` flag.
+All logging will respect the `window.JDGrab.debugEnabled` flag.
 
 ## Privacy
 
 This extension:
-- Only runs on linkedin.com domains
+- Only runs on linkedin.com, indeed.com, glassdoor.com, wellfound.com, and welcometothejungle.com domains
 - Does not collect or transmit any data
 - Stores only your keyboard shortcut preference locally
 - Does not track your browsing or job search activity

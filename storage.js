@@ -1,9 +1,9 @@
 // Storage utilities for keyboard shortcut management
 
 // Debug configuration (shared with content.js)
-window.LinkedInJobQuickSelect = window.LinkedInJobQuickSelect || {};
-if (typeof window.LinkedInJobQuickSelect.debugEnabled === 'undefined') {
-  window.LinkedInJobQuickSelect.debugEnabled = false; // Set to true to enable debug logging
+window.JDGrab = window.JDGrab || {};
+if (typeof window.JDGrab.debugEnabled === 'undefined') {
+  window.JDGrab.debugEnabled = false; // Set to true to enable debug logging
 }
 
 /**
@@ -13,9 +13,9 @@ if (typeof window.LinkedInJobQuickSelect.debugEnabled === 'undefined') {
  * @param {*} data - Optional data to log
  */
 function debugLog(level, message, data = null) {
-  if (!window.LinkedInJobQuickSelect.debugEnabled) return;
+  if (!window.JDGrab.debugEnabled) return;
 
-  const prefix = 'LinkedIn Job Quick Select:';
+  const prefix = 'JD Grab:';
   const fullMessage = `${prefix} ${message}`;
 
   if (data !== null) {

@@ -96,7 +96,7 @@ test.describe('Glassdoor Search Panel - DOM Selection', () => {
 
   test('findJobTitleUrl returns job-listing link from search page', async () => {
     const url = await page.evaluate(() => {
-      return window.LinkedInJobQuickSelect?.findJobTitleUrl?.() ?? null;
+      return window.JDGrab?.findJobTitleUrl?.() ?? null;
     });
 
     expect(url).toContain('/job-listing/');

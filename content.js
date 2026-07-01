@@ -378,7 +378,7 @@ document.addEventListener('keydown', diagnosticListener, { capture: true });
 debugLog('log', 'Diagnostic listener active');
 
 // Expose helper functions for debugging from console
-window.LinkedInJobQuickSelect.checkStatus = function() {
+window.JDGrab.checkStatus = function() {
   const status = {
     registered: listenerState.registered,
     registrationCount: listenerState.registrationCount,
@@ -394,19 +394,19 @@ window.LinkedInJobQuickSelect.checkStatus = function() {
       isContentEditable: document.activeElement?.isContentEditable
     },
     documentHasFocus: document.hasFocus(),
-    debugEnabled: window.LinkedInJobQuickSelect.debugEnabled
+    debugEnabled: window.JDGrab.debugEnabled
   };
-  console.log('LinkedIn Job Quick Select Status:', status);
+  console.log('JD Grab Status:', status);
   return status;
 };
 
-window.LinkedInJobQuickSelect.forceReregister = function() {
+window.JDGrab.forceReregister = function() {
   debugLog('log', 'Manual re-registration requested from console');
   registerKeyboardListener();
   console.log('Listeners re-registered. Try your shortcut now.');
 };
 
-debugLog('log', 'Helper functions exposed: LinkedInJobQuickSelect.checkStatus() and LinkedInJobQuickSelect.forceReregister()');
+debugLog('log', 'Helper functions exposed: JDGrab.checkStatus() and JDGrab.forceReregister()');
 
 // Periodic health check
 function startListenerHealthCheck() {
@@ -565,7 +565,7 @@ function findJobTitleUrl() {
   return fallback?.href || null;
 }
 
-window.LinkedInJobQuickSelect.findJobTitleUrl = findJobTitleUrl;
+window.JDGrab.findJobTitleUrl = findJobTitleUrl;
 
 function openJobTitleLink() {
   try {

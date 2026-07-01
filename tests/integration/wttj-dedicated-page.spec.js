@@ -113,7 +113,7 @@ test.describe('Welcome to the Jungle - Dedicated Job Page', () => {
 
   test('findJobTitleUrl returns current URL on dedicated page', async () => {
     const url = await page.evaluate(() => {
-      return window.LinkedInJobQuickSelect?.findJobTitleUrl?.() ?? null;
+      return window.JDGrab?.findJobTitleUrl?.() ?? null;
     });
 
     expect(url).toContain('welcometothejungle.com');

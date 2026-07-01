@@ -99,7 +99,7 @@ test.describe('Indeed Search Panel - DOM Selection', () => {
 
   test('findJobTitleUrl returns viewjob URL from vjk param', async () => {
     const url = await page.evaluate(() => {
-      return window.LinkedInJobQuickSelect?.findJobTitleUrl?.() ?? null;
+      return window.JDGrab?.findJobTitleUrl?.() ?? null;
     });
 
     expect(url).toBe('https://www.indeed.com/viewjob?jk=abc123test');

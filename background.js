@@ -1,4 +1,4 @@
-// Background service worker for LinkedIn Job Quick Select
+// Background service worker for JD Grab
 
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'openWindow') {
@@ -50,7 +50,7 @@ async function sendWithRetry(tabId, message, attempts = 5, delayMs = 800) {
       }
     }
   }
-  console.warn('LinkedIn Job Quick Select: Could not reach content script after retries');
+  console.warn('JD Grab: Could not reach content script after retries');
 }
 
 function waitForTabComplete(tabId) {

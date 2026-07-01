@@ -83,7 +83,7 @@ test.describe('Indeed Dedicated Job Page - DOM Selection', () => {
 
   test('findJobTitleUrl returns current URL on dedicated page', async () => {
     const url = await page.evaluate(() => {
-      return window.LinkedInJobQuickSelect?.findJobTitleUrl?.() ?? null;
+      return window.JDGrab?.findJobTitleUrl?.() ?? null;
     });
 
     expect(url).toContain('/viewjob?jk=abc123test');

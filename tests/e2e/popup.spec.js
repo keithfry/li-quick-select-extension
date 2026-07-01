@@ -40,7 +40,7 @@ test.describe('Popup Page', () => {
   test('renders popup correctly', async () => {
     // Check header
     const header = page.locator('.header h1');
-    await expect(header).toContainText('LinkedIn Job Quick Select');
+    await expect(header).toContainText('JD Grab');
 
     // Check description
     const description = page.locator('.description');

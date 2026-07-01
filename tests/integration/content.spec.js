@@ -242,7 +242,7 @@ test.describe('Content Script - DOM Selection', () => {
   test('logs appropriate console messages', async () => {
     // Enable debug logging (off by default; addInitScript doesn't apply after setContent)
     await page.evaluate(() => {
-      window.LinkedInJobQuickSelect.debugEnabled = true;
+      window.JDGrab.debugEnabled = true;
     });
 
     const consoleMessages = [];
@@ -261,7 +261,7 @@ test.describe('Content Script - DOM Selection', () => {
 
     // Should have logged success message
     const hasSuccessLog = consoleMessages.some(msg =>
-      msg.includes('LinkedIn Job Quick Select') &&
+      msg.includes('JD Grab') &&
       (msg.includes('selected successfully') || msg.includes('Shortcut activated'))
     );
 
