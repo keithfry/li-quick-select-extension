@@ -1,0 +1,57 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - PRIVACY_POLICY.md
+      - site/**
+      - .github/workflows/pages.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # PRIVACY_POLICY.md at the repo root is the single source of truth;
+      # wrap it in Jekyll front matter at build time.
+      - name: Copy privacy policy into site
+        run: |
+          {
+            echo "---"
+            echo "title: Privacy Policy"
+            echo "layout: default"
+            echo "permalink: /privacy-policy/"
+            echo "---"
+            cat PRIVACY_POLICY.md
+          } > site/privacy-policy.md
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./site
+          destination: ./_site
+
+      - uses: actions/upload-pages-artifact@v3
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

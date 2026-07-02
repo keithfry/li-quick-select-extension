@@ -1,0 +1,49 @@
+name: Publish to Chrome Web Store
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - manifest.json
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      # Only publish when manifest.json's version actually changed
+      # (manual workflow_dispatch runs always publish).
+      - name: Detect version change
+        id: version
+        run: |
+          NEW=$(jq -r .version manifest.json)
+          if OLD_MANIFEST=$(git show HEAD^:manifest.json 2>/dev/null); then
+            OLD=$(echo "$OLD_MANIFEST" | jq -r .version)
+          else
+            OLD=""
+          fi
+          echo "new=$NEW" >> "$GITHUB_OUTPUT"
+          if [ "$NEW" = "$OLD" ] && [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+            echo "Version unchanged ($NEW); skipping publish."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Version changed: '$OLD' -> '$NEW'"
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build extension zip
+        if: steps.version.outputs.changed == 'true'
+        run: ./build.sh
+
+      - name: Upload and publish
+        if: steps.version.outputs.changed == 'true'
+        run: npx --yes chrome-webstore-upload-cli@3 upload --source build/jd-grab.zip --auto-publish
+        env:
+          EXTENSION_ID: ${{ secrets.CHROME_EXTENSION_ID }}
+          CLIENT_ID: ${{ secrets.CHROME_CLIENT_ID }}
+          CLIENT_SECRET: ${{ secrets.CHROME_CLIENT_SECRET }}
+          REFRESH_TOKEN: ${{ secrets.CHROME_REFRESH_TOKEN }}
