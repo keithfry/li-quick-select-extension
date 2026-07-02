@@ -16,6 +16,7 @@ A Chrome extension that allows you to quickly select job description text on Lin
 - **Smart Text Selection**: Automatically finds and selects the job description content
 - **SPA Navigation Support**: Works seamlessly as you navigate between jobs
 - **Fallback Selection Methods**: Multiple strategies to ensure reliable text selection
+- **Right-click menu**: All actions are also available from the "JD Grab" right-click menu on supported job sites
 
 ## Installation
 
@@ -49,6 +50,8 @@ A Chrome extension that allows you to quickly select job description text on Lin
 2. Press your configured keyboard shortcut
 3. The "About the job" section will be selected and scrolled into view
 4. You can now copy the text with Ctrl+C (or Cmd+C on Mac)
+
+The same actions are also available by right-clicking the page and choosing the "JD Grab" menu.
 
 ## Debug Logging
 

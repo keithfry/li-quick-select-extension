@@ -89,35 +89,41 @@ const CONTEXT_MENU_ACTIONS = {
   'open-title-and-select': 'openTitleAndSelect',
 };
 
+function logMenuCreateError() {
+  if (chrome.runtime.lastError) {
+    console.warn('JD Grab: context menu create failed', chrome.runtime.lastError.message);
+  }
+}
+
 chrome.runtime.onInstalled.addListener(() => {
   chrome.contextMenus.removeAll(() => {
     chrome.contextMenus.create({
       id: 'jd-grab',
       title: 'JD Grab',
-      contexts: ['page'],
+      contexts: ['page', 'selection', 'link'],
       documentUrlPatterns: SUPPORTED_SITE_PATTERNS,
-    });
+    }, logMenuCreateError);
     chrome.contextMenus.create({
       id: 'select-description',
       parentId: 'jd-grab',
       title: 'Select Job Description',
-      contexts: ['page'],
+      contexts: ['page', 'selection', 'link'],
       documentUrlPatterns: SUPPORTED_SITE_PATTERNS,
-    });
+    }, logMenuCreateError);
     chrome.contextMenus.create({
       id: 'open-title',
       parentId: 'jd-grab',
       title: 'Open Job Title in New Window/Tab',
-      contexts: ['page'],
+      contexts: ['page', 'selection', 'link'],
       documentUrlPatterns: SUPPORTED_SITE_PATTERNS,
-    });
+    }, logMenuCreateError);
     chrome.contextMenus.create({
       id: 'open-title-and-select',
       parentId: 'jd-grab',
       title: 'Open Job Title & Select Description',
-      contexts: ['page'],
+      contexts: ['page', 'selection', 'link'],
       documentUrlPatterns: SUPPORTED_SITE_PATTERNS,
-    });
+    }, logMenuCreateError);
   });
 });
 

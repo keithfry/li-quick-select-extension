@@ -26,12 +26,17 @@ Add `"contextMenus"` to `permissions` in `manifest.json`.
 
 In `background.js`, on `chrome.runtime.onInstalled`, register:
 
-- Parent item: `id: "jd-grab"`, title `"JD Grab"`, `contexts: ["page"]`
+- Parent item: `id: "jd-grab"`, title `"JD Grab"`,
+  `contexts: ["page", "selection", "link"]`
 - Three children, each with `documentUrlPatterns` set to the same 5 host
   patterns used in `content_scripts.matches`:
   - `id: "select-description"` — title "Select Job Description"
   - `id: "open-title"` — title "Open Job Title in New Window/Tab"
   - `id: "open-title-and-select"` — title "Open Job Title & Select Description"
+
+Note (per post-implementation review): the menu also appears when
+right-clicking selected text or links, not just blank page area, since
+`page`-only contexts hid the menu in those cases.
 
 ## Click handling
 
