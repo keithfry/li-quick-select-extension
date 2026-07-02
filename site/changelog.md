@@ -6,7 +6,7 @@ permalink: /changelog/
 
 # Changelog
 
-## 1.8.1
+## 1.8.2
 
 - **New sites:** Greenhouse (dedicated job-boards pages and the
   `my.greenhouse.io` candidate-portal modal), Lever, Ashby, ZipRecruiter
