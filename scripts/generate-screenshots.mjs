@@ -45,6 +45,31 @@ async function shootExtensionPages() {
     await popupPage.setViewportSize({ width: 1280, height: 800 });
     await popupPage.goto(`chrome-extension://${extensionId}/popup.html`);
     await popupPage.waitForTimeout(300);
+
+    // Scale the popup content to fill 80% of the 1280x800 canvas, centered,
+    // so it isn't a tiny box adrift in whitespace.
+    await popupPage.evaluate(() => {
+      const container = document.querySelector('.popup-container');
+      const rect = container.getBoundingClientRect();
+      const scale = Math.min((1280 * 0.8) / rect.width, (800 * 0.8) / rect.height);
+
+      // Pin the container to its natural box before the body is resized, so
+      // reflow doesn't change what gets scaled.
+      container.style.width = `${rect.width}px`;
+      container.style.flexShrink = '0';
+
+      document.body.style.margin = '0';
+      document.body.style.width = '1280px';
+      document.body.style.height = '800px';
+      document.body.style.display = 'flex';
+      document.body.style.alignItems = 'center';
+      document.body.style.justifyContent = 'center';
+
+      container.style.transform = `scale(${scale})`;
+      container.style.transformOrigin = 'center';
+    });
+    await popupPage.waitForTimeout(100);
+
     await popupPage.screenshot({ path: path.join(OUT_DIR, 'popup.png') });
     await popupPage.close();
 
