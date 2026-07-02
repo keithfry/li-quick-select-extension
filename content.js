@@ -431,6 +431,13 @@ chrome.runtime.onMessage.addListener((message) => {
     debugLog('log', 'Received selectJobDescription from background — polling for content');
     waitForContentAndSelect();
   }
+
+  if (message.action === 'runContextMenuAction') {
+    debugLog('log', 'Received context menu action', message.name);
+    if (message.name === 'selectDescription') selectAboutTheJobSection();
+    if (message.name === 'openTitle') openJobTitleLink();
+    if (message.name === 'openTitleAndSelect') openAndSelectInNewWindow();
+  }
 });
 
 // Poll for job description content then select it (used after background opens a new tab/window)
