@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "JD Grab",
-  "version": "1.8.0",
+  "version": "1.8.1",
   "description": "Select and copy job description text on LinkedIn, Indeed, Glassdoor, Wellfound, Welcome to the Jungle, Greenhouse, Lever, Ashby, ZipRecruiter, and We Work Remotely with one keystroke.",
   "permissions": ["storage", "windows", "tabs", "contextMenus"],
   "icons": {
