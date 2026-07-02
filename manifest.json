@@ -3,7 +3,7 @@
   "name": "JD Grab",
   "version": "1.5.1",
   "description": "Select and copy job description text on LinkedIn, Indeed, Glassdoor, Wellfound, and Welcome to the Jungle with one keystroke.",
-  "permissions": ["storage", "windows", "tabs"],
+  "permissions": ["storage", "windows", "tabs", "contextMenus"],
   "icons": {
     "16": "icons/icon16.png",
     "32": "icons/icon32.png",

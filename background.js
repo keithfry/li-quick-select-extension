@@ -71,3 +71,61 @@ function waitForTabComplete(tabId) {
     });
   });
 }
+
+// Context menu — same actions as the keyboard shortcuts.
+// Patterns must match content_scripts.matches in manifest.json so the
+// menu only appears where the content script is injected.
+const SUPPORTED_SITE_PATTERNS = [
+  '*://*.linkedin.com/*',
+  '*://*.wellfound.com/*',
+  '*://*.indeed.com/*',
+  '*://*.glassdoor.com/*',
+  '*://*.welcometothejungle.com/*',
+];
+
+const CONTEXT_MENU_ACTIONS = {
+  'select-description': 'selectDescription',
+  'open-title': 'openTitle',
+  'open-title-and-select': 'openTitleAndSelect',
+};
+
+chrome.runtime.onInstalled.addListener(() => {
+  chrome.contextMenus.removeAll(() => {
+    chrome.contextMenus.create({
+      id: 'jd-grab',
+      title: 'JD Grab',
+      contexts: ['page'],
+      documentUrlPatterns: SUPPORTED_SITE_PATTERNS,
+    });
+    chrome.contextMenus.create({
+      id: 'select-description',
+      parentId: 'jd-grab',
+      title: 'Select Job Description',
+      contexts: ['page'],
+      documentUrlPatterns: SUPPORTED_SITE_PATTERNS,
+    });
+    chrome.contextMenus.create({
+      id: 'open-title',
+      parentId: 'jd-grab',
+      title: 'Open Job Title in New Window/Tab',
+      contexts: ['page'],
+      documentUrlPatterns: SUPPORTED_SITE_PATTERNS,
+    });
+    chrome.contextMenus.create({
+      id: 'open-title-and-select',
+      parentId: 'jd-grab',
+      title: 'Open Job Title & Select Description',
+      contexts: ['page'],
+      documentUrlPatterns: SUPPORTED_SITE_PATTERNS,
+    });
+  });
+});
+
+chrome.contextMenus.onClicked.addListener((info, tab) => {
+  const name = CONTEXT_MENU_ACTIONS[info.menuItemId];
+  if (!name || !tab?.id) return;
+  chrome.tabs.sendMessage(tab.id, { action: 'runContextMenuAction', name })
+    .catch(() => {
+      console.warn('JD Grab: content script unavailable for context menu action');
+    });
+});
