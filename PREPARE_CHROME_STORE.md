@@ -8,7 +8,7 @@
 - [x] Committed (1fa9670 rebrand: rename extension to JD Grab, add icons)
 
 ## Store Listing Requirements
-- [x] Privacy policy content drafted (`PRIVACY_POLICY.md`) — [ ] still needs to be published at a public URL (GitHub Pages, gist, or hosted page) before submission
+- [x] Privacy policy content drafted (`PRIVACY_POLICY.md`) — [x] published at https://keithfry.github.io/jd-grab/privacy-policy/ (auto-deployed by `.github/workflows/pages.yml`)
 - [x] Short description (≤132 chars) — drafted in `STORE_LISTING.md`
 - [x] Detailed description (store listing body) — drafted in `STORE_LISTING.md`
 - [x] Category selection — Productivity
