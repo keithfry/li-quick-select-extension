@@ -14,7 +14,6 @@
 - [x] Category selection — Productivity
 - [x] Support/contact email — keithfry@gmail.com
 - [x] Screenshots: auto-generated via `npm run screenshots` (`scripts/generate-screenshots.mjs` → `store-assets/screenshots/`):
-  - 1280x800 for all 5 sites (uses test fixture HTML, no real site chrome/nav — consider replacing with live-site captures for a more polished listing)
   - `options-page.png` — real extension options UI (loaded via persistent context, `chrome-extension://` origin)
   - `popup.png` — real extension popup UI, cropped to the popup's natural size
   - Note: the toolbar icon click itself (native Chrome browser chrome) can't be captured by Playwright — only the popup's own content, which is what matters for the store listing

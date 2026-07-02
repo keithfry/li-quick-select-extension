@@ -1,6 +1,6 @@
 #!/usr/bin/env node
-// Generates Chrome Web Store screenshots (1280x800) showing JD Grab's
-// text-selection in action on each supported site's fixture page.
+// Generates Chrome Web Store screenshots (1280x800) of JD Grab's own
+// extension pages (options, popup).
 //
 // Usage: node scripts/generate-screenshots.mjs
 
@@ -13,65 +13,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const ROOT = path.join(__dirname, '..');
 const OUT_DIR = path.join(ROOT, 'store-assets', 'screenshots');
-
-const SITES = [
-  { name: 'linkedin', fixture: 'linkedin-job-page.html' },
-  { name: 'indeed', fixture: 'indeed-job-dedicated-page.html' },
-  { name: 'glassdoor', fixture: 'glassdoor-job-search.html' },
-  { name: 'wellfound', fixture: 'wellfound-dedicated-job-page.html' },
-  { name: 'welcome-to-the-jungle', fixture: 'wttj-dedicated-page.html' },
-];
-
-const CHROME_MOCK_SCRIPT = () => {
-  class ChromeStorageMock {
-    get(keys, callback) {
-      callback({
-        keyboardShortcut: {
-          key: 'S',
-          code: 'KeyS',
-          altKey: true,
-          ctrlKey: false,
-          shiftKey: true,
-          metaKey: false,
-        },
-      });
-    }
-  }
-
-  window.chrome = {
-    storage: {
-      local: new ChromeStorageMock(),
-      onChanged: { addListener: () => {} },
-    },
-    runtime: {},
-  };
-};
-
-async function shootSite(browser, { name, fixture }) {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
-
-  const htmlPath = path.join(ROOT, 'tests', 'fixtures', fixture);
-  const html = fs.readFileSync(htmlPath, 'utf-8');
-  await page.setContent(html);
-
-  await page.addInitScript(CHROME_MOCK_SCRIPT);
-  await page.addScriptTag({ path: path.join(ROOT, 'storage.js') });
-  await page.addScriptTag({ path: path.join(ROOT, 'content.js') });
-  await page.waitForTimeout(500);
-
-  await page.keyboard.down('Alt');
-  await page.keyboard.down('Shift');
-  await page.keyboard.press('S');
-  await page.keyboard.up('Shift');
-  await page.keyboard.up('Alt');
-  await page.waitForTimeout(200);
-
-  const outPath = path.join(OUT_DIR, `${name}.png`);
-  await page.screenshot({ path: outPath });
-  await page.close();
-
-  console.log(`saved ${outPath}`);
-}
 
 async function shootExtensionPages() {
   // Options and popup need the extension actually loaded (chrome.storage,
@@ -117,15 +58,6 @@ async function shootExtensionPages() {
 
 async function main() {
   fs.mkdirSync(OUT_DIR, { recursive: true });
-  const browser = await chromium.launch();
-  try {
-    for (const site of SITES) {
-      await shootSite(browser, site);
-    }
-  } finally {
-    await browser.close();
-  }
-
   await shootExtensionPages();
 }
 
