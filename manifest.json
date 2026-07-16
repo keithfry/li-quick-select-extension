@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "JD Grab",
-  "version": "1.8.2",
+  "version": "1.8.3",
   "description": "Quickly select and copy job description text with one keystroke on LinkedIn, Indeed, and 8 other job sites.",
   "permissions": ["storage", "windows", "tabs", "contextMenus"],
   "icons": {
