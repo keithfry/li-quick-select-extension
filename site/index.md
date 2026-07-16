@@ -46,7 +46,7 @@ JD Grab does not collect, transmit, or sell any personal data. See the full
 
 ## Install
 
-Coming soon to the Chrome Web Store.
+[Get JD Grab on the Chrome Web Store](https://chromewebstore.google.com/detail/jd-grab/kbcgfggnhlgcgemjgnoffkcgeodcjjaj).
 
 ## Support
 
