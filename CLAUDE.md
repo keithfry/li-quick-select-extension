@@ -40,6 +40,8 @@ No lint/typecheck script configured. `fullyParallel: false` and `workers: 1` in 
 
 **ZipRecruiter selection guard**: `guardZipRecruiterSelection()` polls (not event-driven — see comment in content.js) to re-apply the selection because ZipRecruiter's rating widget re-renders on scroll and silently clears `window.getSelection()` without touching the DOM nodes.
 
+**Indeed selection guard**: `guardIndeedSelection()` is the same pattern — Indeed's search-panel job details keep hydrating lazy "mosaic" widgets after `#jobDescriptionText` first gets its text, which can both clear the selection and reset scroll position right after we act. `selectIndeedDescription()` also retries until the element actually has text (it can exist empty for a moment before the real fetch response lands).
+
 **Debug logging**: gated behind `window.JDGrab.debugEnabled` (default `false`), toggle live via browser console: `window.JDGrab.debugEnabled = true`. All logs prefixed `JD Grab:`. Helper console functions: `JDGrab.checkStatus()`, `JDGrab.forceReregister()`.
 
 ## Testing approach
@@ -52,6 +54,10 @@ No lint/typecheck script configured. `fullyParallel: false` and `workers: 1` in 
 ## Adding a new supported site
 
 Requires changes in all of: `manifest.json` (`content_scripts.matches`), `background.js` (`SUPPORTED_SITE_PATTERNS`), `content.js` (the `isX`/`findJobTitleUrl`/`selectXDescription` triad plus dispatch branches in `isJobPage()` and `selectAboutTheJobSection()`), a new fixture + integration spec, and the site list in `README.md` / `manifest.json` description / `store-assets/description.txt`.
+
+## Releasing
+
+Bumping `version` in `manifest.json` and pushing to `master` triggers `.github/workflows/chrome-store.yml`, which builds and auto-publishes to the Chrome Web Store. **Every commit that bumps the version must also add a matching entry to `site/changelog.md`** in the same commit — the store listing ships silently otherwise. Bump `manifest.json` and `package.json` together (keep them in sync).
 
 ## Other directories
 

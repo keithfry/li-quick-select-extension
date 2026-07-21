@@ -789,12 +789,24 @@ function selectGlassdoorDescription() {
   }
 }
 
-function selectIndeedDescription() {
+// Indeed's search-panel job details swap in via async fetch: #jobDescriptionText
+// can exist in the DOM (as an empty skeleton, or mid-replacement between two
+// job cards) before its text content actually lands. Selecting at that instant
+// yields a non-empty Range with zero text. Poll for populated content before
+// selecting rather than firing on first sight of the element.
+function selectIndeedDescription(attempt = 0) {
+  const maxAttempts = 10;
+  const retryDelayMs = 200;
+
   try {
     const el = document.querySelector('#jobDescriptionText');
 
-    if (!el) {
-      debugLog('warn', 'Could not find Indeed job description element (#jobDescriptionText)');
+    if (!el || !el.textContent.trim()) {
+      if (attempt < maxAttempts) {
+        setTimeout(() => selectIndeedDescription(attempt + 1), retryDelayMs);
+        return;
+      }
+      debugLog('warn', 'Could not find populated Indeed job description element (#jobDescriptionText)');
       return;
     }
 
@@ -805,17 +817,82 @@ function selectIndeedDescription() {
     selection.removeAllRanges();
     selection.addRange(range);
 
+    // 'auto' (not 'smooth') so the scroll completes immediately rather than
+    // animating — a smooth scroll leaves an async window during which the
+    // highlighted selection is easy to miss mid-motion (same reasoning as
+    // ZipRecruiter's scrollIntoView below).
     const heading = document.querySelector('#jobDescriptionTitleHeading');
     if (heading) {
-      heading.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      heading.scrollIntoView({ behavior: 'auto', block: 'start' });
     } else {
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      el.scrollIntoView({ behavior: 'auto', block: 'start' });
     }
 
     debugLog('log', 'Indeed description selected successfully');
+    guardIndeedSelection(el);
   } catch (error) {
     debugLog('error', 'Error selecting Indeed description', error);
   }
+}
+
+// Indeed's panel keeps mutating after #jobDescriptionText populates (lazy
+// "mosaic" widgets — benefits, related-jobs, profile-insights — hydrate in
+// just after the description text lands). One of those later re-renders can
+// clear window.getSelection(), or reset the panel's scroll position right
+// after our own scrollIntoView ran, even though the description's own DOM
+// nodes are untouched — so a select right as the panel finishes loading can
+// silently lose its highlight, or leave the (still-correct) selection
+// scrolled out of view. Poll and repair both, same approach as
+// ZipRecruiter's guardZipRecruiterSelection.
+let indeedSelectionGuardInterval = null;
+function guardIndeedSelection(el, timeoutMs = 4000, intervalMs = 150) {
+  if (indeedSelectionGuardInterval) {
+    clearInterval(indeedSelectionGuardInterval);
+    indeedSelectionGuardInterval = null;
+  }
+
+  const deadline = Date.now() + timeoutMs;
+
+  function check() {
+    if (Date.now() > deadline) {
+      clearInterval(indeedSelectionGuardInterval);
+      indeedSelectionGuardInterval = null;
+      return;
+    }
+
+    if (!el.isConnected) {
+      const freshEl = document.querySelector('#jobDescriptionText');
+      if (!freshEl || !freshEl.textContent.trim()) return;
+      el = freshEl;
+    }
+
+    const rect = el.getBoundingClientRect();
+    const offScreen = rect.bottom <= 0 || rect.top >= window.innerHeight;
+    if (offScreen) {
+      const heading = document.querySelector('#jobDescriptionTitleHeading');
+      (heading || el).scrollIntoView({ behavior: 'auto', block: 'start' });
+      debugLog('log', 'Re-scrolled Indeed description into view after it was reset');
+    }
+
+    const selection = window.getSelection();
+    if (selection && selection.toString().trim().length > 0) return;
+
+    const activeElement = document.activeElement;
+    if (activeElement && (
+      activeElement.tagName === 'INPUT' ||
+      activeElement.tagName === 'TEXTAREA' ||
+      activeElement.isContentEditable
+    )) return;
+
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    debugLog('log', 'Restored Indeed description selection after it was cleared');
+  }
+
+  check();
+  indeedSelectionGuardInterval = setInterval(check, intervalMs);
 }
 
 function selectWelcomeToTheJungleDescription() {

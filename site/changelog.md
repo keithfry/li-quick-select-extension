@@ -6,6 +6,16 @@ permalink: /changelog/
 
 # Changelog
 
+## 1.8.6
+
+- Fix: Indeed's search-panel job details can take a few keystroke presses to
+  select. Root causes: the description text streams in asynchronously after
+  the panel element first appears (selecting too early grabbed an empty
+  range), and the panel's own re-renders sometimes clear the selection or
+  reset scroll position right after we apply it. The select action now waits
+  for the description to actually have content, and briefly re-applies the
+  selection/scroll if Indeed's own JS knocks it out.
+
 ## 1.8.2
 
 - **New sites:** Greenhouse (dedicated job-boards pages and the
