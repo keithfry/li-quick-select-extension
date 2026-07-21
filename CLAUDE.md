@@ -57,7 +57,9 @@ Requires changes in all of: `manifest.json` (`content_scripts.matches`), `backgr
 
 ## Releasing
 
-Bumping `version` in `manifest.json` and pushing to `master` triggers `.github/workflows/chrome-store.yml`, which builds and auto-publishes to the Chrome Web Store. **Every commit that bumps the version must also add a matching entry to `site/changelog.md`** in the same commit — the store listing ships silently otherwise. Bump `manifest.json` and `package.json` together (keep them in sync).
+Bumping `version` in `manifest.json` and pushing to `master` triggers `.github/workflows/chrome-store.yml`, which builds and submits to the Chrome Web Store for review (auto-publishes once Google approves — not instant). **Every commit that bumps the version must also add a matching entry to `site/changelog.md`** in the same commit — the store listing ships silently otherwise. Bump `manifest.json` and `package.json` together (keep them in sync).
+
+Changelog entries are user-facing, not engineering notes: write what changed for someone using the extension, not the implementation. E.g. "Fixed a defect in Indeed selection" / "Added new site: boogaloo.com", not a paragraph about hydration races, DOM selectors, or guard functions.
 
 ## Other directories
 
